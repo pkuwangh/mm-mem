@@ -1,2 +1,2 @@
-# m-mem
+# mm-mem
 Memory benchmarking and characterization tools
