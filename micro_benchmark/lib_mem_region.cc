@@ -30,6 +30,13 @@ MemRegion::MemRegion(
     num_active_pages_ (active_size_ / page_size_),
     num_lines_in_page_ (page_size_ / line_size_)
 {
+    if (page_size_ > active_size_) {
+        page_size_ = 4096;
+    }
+    num_all_pages_ = size_ / page_size_;
+    num_active_pages_ = active_size_ / page_size_;
+    num_lines_in_page_ = page_size_ / line_size_;
+
     os_page_size_ = getpagesize();
     // std::cout << "OS page size: " << os_page_size_ << std::endl;
 

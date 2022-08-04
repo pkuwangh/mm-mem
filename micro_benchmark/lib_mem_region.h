@@ -7,7 +7,7 @@
 
 namespace mm_utils {
 
-enum class MemType : char {
+enum class MemType : int {
   NATIVE,
   NODE0,
   NODE1,
@@ -15,7 +15,7 @@ enum class MemType : char {
 };
 
 
-enum class HugePageType : char {
+enum class HugePageType : int {
   NONE,
   HGPG_2MB,
   HGPG_1GB,
@@ -75,6 +75,7 @@ class MemRegion {
     uint64_t numAllLines() const { return num_all_pages_ * num_lines_in_page_; }
     uint64_t numActiveLines() const { return num_active_pages_ * num_lines_in_page_; }
     uint64_t activeSize() const { return active_size_; }
+    uint64_t lineSize() const { return line_size_; }
     // entry point
     char** getStartPoint() const { return (char**)getOffsetAddr_(0); }
     char** getHalfPoint() const { return (char**)getOffsetAddr_(active_size_ / 2); }

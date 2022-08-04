@@ -3,7 +3,7 @@
 import os
 import shutil
 
-pkg_list = ["gcc", "gcc-c++", "cmake", "numactl-devel", "boost-devel"]
+pkg_list = ["gcc", "gcc-c++", "cmake3", "numactl-devel", "boost-devel"]
 
 if shutil.which("dnf"):
     pkg_manager = "dnf"

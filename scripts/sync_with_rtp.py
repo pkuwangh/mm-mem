@@ -20,6 +20,7 @@ def main(args):
             cmd = [
                 'rsync', '-rvl',
                 '--exclude', '.*swp',
+                '--exclude', '__pycache__',
                 '--exclude', 'build',
                 f'{remote_path}/', proj_path
             ]
@@ -27,6 +28,8 @@ def main(args):
             cmd = [
                 'rsync', '-rvl',
                 '--exclude', '.*swp',
+                '--exclude', '__pycache__',
+                '--exclude', 'build',
                 '--exclude', '.git',
                 f'{proj_path}/', remote_path
             ]
