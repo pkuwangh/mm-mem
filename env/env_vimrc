@@ -1,0 +1,47 @@
+syntax on
+colorscheme desert
+hi normal guifg=white guibg=black
+hi comment ctermfg=red guifg=red
+
+imap jj <Esc>
+
+set autoindent
+set cindent
+set smartindent
+set tabstop=4
+set softtabstop=2
+set shiftwidth=4
+
+set expandtab
+set smarttab
+
+set cino=g2,h2,N-s
+
+set ignorecase
+set smartcase
+
+set hlsearch
+set incsearch
+
+set laststatus=2
+set statusline=%F%m%r%h%w\[TYPE=%Y]\[POS=%l,%v][%p%%]\%{strftime(\"%d/%m/%y\ -\ %H:%M\")}
+
+filetype on
+filetype plugin on
+filetype indent on
+
+set number
+
+map <C-K> :pyf /usr/local/share/clang/clang-format.py<CR>
+imap <C-K> <ESC>:pyf /usr/local/share/clang/clang-format.py<CR>i
+
+fun! ShowFuncName()
+  let lnum = line(".")
+  let col = col(".")
+  echohl ModeMsg
+  echo getline(search("^[^ \t#/]\\{2}.*[^:]\s*$", 'bW'))
+  echohl None
+  call search("\\%" . lnum . "l" . "\\%" . col . "c")
+endfun
+map f :call ShowFuncName() <CR>
+
