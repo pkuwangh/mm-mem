@@ -3,6 +3,7 @@ file(GLOB COMMON_SRCS lib_*.cc)
 set(TESTS
   "test_peak_bandwidth"
   "test_idle_latency"
+  "test_loaded_latency"
 )
 
 foreach(TEST ${TESTS})

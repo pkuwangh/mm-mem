@@ -8,26 +8,15 @@
 
 #include "lib_mem_region.h"
 #include "lib_timing.h"
-#include "worker_common.h"
+#include "worker_kernels.h"
 
 
 namespace mm_worker {
 
-void kernel_bw_r1w0_sequential(uint64_t& ret, uint64_t*& p) {
-    LOOP256(ret += *p; p += 4;)
-}
-
-void kernel_bw_r1w1_sequential(uint64_t& ret, uint64_t*& p) {
-    LOOP128(ret += *p; p += 4; *p = ret; p += 4;)
-}
-
-void kernel_bw_r2w1_sequential(uint64_t& ret, uint64_t*& p) {
-    LOOP64(ret += *p; p += 4; ret += *p; p += 4; ret += *p; p += 4; *p = ret; p += 4;)
-}
-
 
 void bw_sequential(
-    const mm_utils::MemRegion::Handle mem_region,
+    kernel_function kernel,
+    mm_utils::MemRegion::Handle mem_region,
     uint32_t read_write_mix,
     uint32_t target_duration,
     uint32_t num_total_threads,
@@ -40,19 +29,14 @@ void bw_sequential(
     const uint64_t loop_bytes = 256 * 32;
     const uint64_t loop_count = mem_region->activeSize() / loop_bytes;
     mm_utils::Timer timer_exec;
-    // the action
-    std::function<void(uint64_t&, uint64_t*&)> kernel;
+    // calculate BW
     float write_fraction = 0;
-    if (read_write_mix == 0) {
-        kernel = kernel_bw_r1w0_sequential;
-    } else if (read_write_mix == 1) {
-        kernel = kernel_bw_r1w1_sequential;
+    if (read_write_mix == 1) {
         write_fraction = 1;
     } else if (read_write_mix == 2) {
-        kernel = kernel_bw_r2w1_sequential;
         write_fraction = 0.5;
     } else {
-      return;
+        write_fraction = 0;
     }
     // run
     uint64_t* const start = (uint64_t*)(mem_region->getStartPoint());

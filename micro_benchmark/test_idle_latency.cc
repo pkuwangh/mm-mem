@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <cassert>
@@ -26,7 +27,7 @@ class Configuration {
 
 int parse_options(Configuration& config, int argc, char** argv) {
     namespace po = boost::program_options;
-    po::options_description desc("Allowed options");
+    po::options_description desc("Idle latency");
     desc.add_options()
         ("help,h", "print usage message")
         ("num_threads,n", po::value(&config.num_threads), "number of threads")
@@ -88,6 +89,7 @@ int main(int argc, char** argv) {
         } else if (config.access_pattern == 2) {
             regions[i]->all_random_init();
         } else {
+            std::cerr << "invalid access pattern" << std::endl;
             return 1;
         }
         // regions[i]->dump();
@@ -113,6 +115,6 @@ int main(int argc, char** argv) {
         total_exec_time += exec_time[i];
     }
     double latency = total_exec_time * 1e9 / total_chases;
-    std::cout << "Idle Latency: " << latency << " ns" << std::endl;
+    std::cout << "Idle Latency: " << std::setprecision(4) << latency << " ns" << std::endl;
     return 0;
 }

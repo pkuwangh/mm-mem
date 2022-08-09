@@ -18,14 +18,14 @@ class Configuration {
     }
     uint32_t num_threads;
     uint64_t region_size_kb = 128 * 1024;
-    uint32_t target_duration_s = 10;
     uint32_t read_write_mix = 0;
+    uint32_t target_duration_s = 10;
 };
 
 
 int parse_options(Configuration& config, int argc, char** argv) {
     namespace po = boost::program_options;
-    po::options_description desc("Allowed options");
+    po::options_description desc("Peak bandwidth");
     desc.add_options()
         ("help,h", "print usage message")
         ("num_threads,n", po::value(&config.num_threads), "number of threads")
@@ -74,6 +74,7 @@ int main(int argc, char** argv) {
     for (uint32_t i = 0; i < config.num_threads; ++i) {
         workers[i] = std::make_shared<std::thread>(
             mm_worker::bw_sequential,
+            mm_worker::get_kernel_peak_load(config.read_write_mix),
             regions[i],
             config.read_write_mix,
             config.target_duration_s,

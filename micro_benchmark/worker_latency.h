@@ -8,18 +8,13 @@
 
 #include "lib_mem_region.h"
 #include "lib_timing.h"
-#include "worker_common.h"
+#include "worker_kernels.h"
 
 
 namespace mm_worker {
 
-void kernel_lat(uint64_t& ret, uint64_t*& p) {
-    LOOP256(p = reinterpret_cast<uint64_t*>(*p);)
-    ret += *p;
-}
-
 void lat_ptr(
-    const mm_utils::MemRegion::Handle mem_region,
+    mm_utils::MemRegion::Handle mem_region,
     uint32_t target_duration,
     uint64_t* finished_chases,
     double* exec_time
@@ -71,7 +66,7 @@ void lat_ptr(
             break;
         }
     }
-    const float threshold = 1.00;
+    const float threshold = 1.01;
     if (timer_exec.getElapsedTime() > target_duration * threshold) {
         std::stringstream ss;
         ss << "elapsed time (s) exec=" << timer_exec.getElapsedTime()
