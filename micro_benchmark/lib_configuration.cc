@@ -29,6 +29,10 @@ Configuration::Configuration(Testing_Type testing_type) :
 void Configuration::add_generic_options_() {
     uint32_t default_num_threads = std::thread::hardware_concurrency();
     uint64_t default_region_size_kb = 128 * 1024;
+    if (testing_type_ == Testing_Type::LATENCY) {
+        default_num_threads = 1;
+        default_region_size_kb = 1024 * 1024;
+    }
     po::options_description generic_options("Generic options");
     generic_options.add_options()
         ("help,h", "print usage message")
@@ -50,9 +54,9 @@ void Configuration::add_latency_options_() {
         ("access_pattern,p",
             po::value(&access_pattern)->default_value(1),
             ("access pattern\n  0 - " +
-             get_str_access_pattern_(0) + "\n  1 - " +
-             get_str_access_pattern_(1) + "\n  2 - " +
-             get_str_access_pattern_(2)).c_str())
+             get_str_access_pattern(0) + "\n  1 - " +
+             get_str_access_pattern(1) + "\n  2 - " +
+             get_str_access_pattern(2)).c_str())
         ("chunk_size,c",
             po::value(&chunk_size_kb)->default_value(128),
             "chunk size in KB - target L1TLB can cover")
@@ -62,22 +66,29 @@ void Configuration::add_latency_options_() {
         ("use_hugepage,H",
             po::value(&use_hugepage)->default_value(0),
             ("use huge pages\n  0 - " +
-             get_str_huge_page_(0) + "\n  1 - " +
-             get_str_huge_page_(1) + "\n  2 - " +
-             get_str_huge_page_(2)).c_str())
+             get_str_huge_page(0) + "\n  1 - " +
+             get_str_huge_page(1) + "\n  2 - " +
+             get_str_huge_page(2)).c_str())
         ;
     desc_->add(latency_options);
 }
 
 void Configuration::add_bandwidth_options_() {
+    uint32_t default_read_write_mix = 0;
+    std::string additional_msg = "";
+    if (testing_type_ == Testing_Type::BANDWIDTH) {
+        default_read_write_mix = 100;
+        additional_msg = "\n 100 - " + get_str_rw_mix(100);
+    }
     po::options_description bandwidth_options("Bandwidth threads options");
     bandwidth_options.add_options()
         ("read_write_mix,m",
-            po::value(&read_write_mix)->default_value(0),
+            po::value(&read_write_mix)->default_value(default_read_write_mix),
             ("read/write mix\n  0 - " +
-             get_str_rw_mix_(0) + "\n  1 - " +
-             get_str_rw_mix_(1) + "\n  2 - " +
-             get_str_rw_mix_(2)).c_str())
+             get_str_rw_mix(0) + "\n  1 - " +
+             get_str_rw_mix(1) + "\n  2 - " +
+             get_str_rw_mix(2) + "\n  3 - " +
+             get_str_rw_mix(3) + additional_msg).c_str())
         ;
     desc_->add(bandwidth_options);
 }
@@ -93,7 +104,7 @@ int Configuration::parse_options(int argc, char** argv) {
     return 0;
 }
 
-std::string Configuration::get_str_access_pattern_(uint32_t x_access_pattern) {
+std::string Configuration::get_str_access_pattern(uint32_t x_access_pattern) {
     if (x_access_pattern == 0) {
         return "sequential";
     } else if (x_access_pattern == 1) {
@@ -105,7 +116,7 @@ std::string Configuration::get_str_access_pattern_(uint32_t x_access_pattern) {
     }
 }
 
-std::string Configuration::get_str_huge_page_(uint32_t x_huge_page) {
+std::string Configuration::get_str_huge_page(uint32_t x_huge_page) {
     if (x_huge_page == 0) {
         return "No huge page";
     } else if (x_huge_page == 1) {
@@ -117,13 +128,17 @@ std::string Configuration::get_str_huge_page_(uint32_t x_huge_page) {
     }
 }
 
-std::string Configuration::get_str_rw_mix_(uint32_t x_rw_mix) {
+std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) {
     if (x_rw_mix == 0) {
         return "all reads";
     } else if (x_rw_mix == 1) {
         return "1:1 read/write";
     } else if (x_rw_mix == 2) {
         return "2:1 read/write";
+    } else if (x_rw_mix == 3) {
+        return "3:1 read/write";
+    } else if (x_rw_mix == 100) {
+        return "sweep read/write ratio";
     } else {
         return "invalid";
     }
@@ -135,11 +150,11 @@ void Configuration::dump() {
     std::cout << "chunk size in KB:  " << chunk_size_kb << std::endl;
     std::cout << "stride size in B:  " << stride_size_b << std::endl;
     std::cout << "access pattern:    " << access_pattern << " - ";
-    std::cout << get_str_access_pattern_(access_pattern) << std::endl;
+    std::cout << get_str_access_pattern(access_pattern) << std::endl;
     std::cout << "use hugepage:      " << use_hugepage << " - ";
-    std::cout << get_str_huge_page_(use_hugepage) << std::endl;
+    std::cout << get_str_huge_page(use_hugepage) << std::endl;
     std::cout << "read/write mix:    " << read_write_mix << " - ";
-    std::cout << get_str_rw_mix_(read_write_mix) << std::endl;
+    std::cout << get_str_rw_mix(read_write_mix) << std::endl;
     std::cout << "target duration:   " << target_duration_s << std::endl;
 }
 

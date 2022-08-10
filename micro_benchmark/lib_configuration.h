@@ -26,6 +26,10 @@ class Configuration {
     int parse_options(int argc, char** argv);
     void dump();
 
+    std::string get_str_access_pattern(uint32_t x_access_pattern);
+    std::string get_str_huge_page(uint32_t x_huge_page);
+    std::string get_str_rw_mix(uint32_t x_rw_mix);
+
     uint32_t num_threads = 1;
     uint64_t region_size_kb = 128 * 1024;
     uint32_t access_pattern = 1;
@@ -42,10 +46,6 @@ class Configuration {
     void add_generic_options_();
     void add_latency_options_();
     void add_bandwidth_options_();
-
-    std::string get_str_access_pattern_(uint32_t x_access_pattern);
-    std::string get_str_huge_page_(uint32_t x_huge_page);
-    std::string get_str_rw_mix_(uint32_t x_rw_mix);
 };
 
 }

@@ -28,14 +28,7 @@ void bw_sequential(
     const uint64_t loop_count = mem_region->activeSize() / loop_bytes;
     mm_utils::Timer timer_exec;
     // calculate BW
-    float write_fraction = 0;
-    if (read_write_mix == 1) {
-        write_fraction = 1;
-    } else if (read_write_mix == 2) {
-        write_fraction = 0.5;
-    } else {
-        write_fraction = 0;
-    }
+    const float write_fraction = mm_worker::get_write_fraction(read_write_mix);
     // run
     uint64_t* const start = (uint64_t*)(mem_region->getStartPoint());
     uint64_t* p = nullptr;

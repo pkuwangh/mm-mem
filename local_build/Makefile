@@ -1,10 +1,10 @@
 default:
 	cmake3 -B build -DCMAKE_BUILD_TYPE=Release ../
-	make -j16 -C build
+	make -j${nproc} -C build
 
 debug:
 	cmake3 -B build -DCMAKE_BUILD_TYPE=Debug ../
-	make -j16 -C build
+	make -j${nproc} -C build
 
 dbg: debug
 

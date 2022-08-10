@@ -11,10 +11,20 @@ using kernel_function = std::function<void(uint64_t&, uint64_t*&)>;
 // dummy one for invalid configs
 void kernel_dummy(uint64_t& ret, uint64_t*& p);
 
+// calculate write bandwidth
+float get_write_fraction(uint32_t read_write_mix);
 
-#define LOOP4(x)   x x x x
-#define LOOP16(x)  LOOP4(x) LOOP4(x) LOOP4(x) LOOP4(x)
-#define LOOP64(x)  LOOP16(x) LOOP16(x) LOOP16(x) LOOP16(x)
+
+#define LOOP1(x)   x
+#define LOOP2(x)   x x
+#define LOOP3(x)   x x x
+#define LOOP4(x)   LOOP2(x) LOOP2(x)
+#define LOOP5(x)   LOOP3(x) LOOP2(x)
+#define LOOP8(x)   LOOP4(x) LOOP4(x)
+#define LOOP16(x)  LOOP8(x) LOOP8(x)
+#define LOOP32(x)  LOOP16(x) LOOP16(x)
+#define LOOP42(x)  LOOP32(x) LOOP8(x) LOOP2(x)
+#define LOOP64(x)  LOOP32(x) LOOP32(x)
 #define LOOP128(x) LOOP64(x) LOOP64(x)
 #define LOOP256(x) LOOP128(x) LOOP128(x)
 
