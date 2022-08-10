@@ -1,4 +1,4 @@
-file(GLOB COMMON_SRCS lib_*.cc)
+file(GLOB COMMON_SRCS lib_*.cc worker_common.cc)
 
 set(TESTS
   "test_peak_bandwidth"
@@ -7,7 +7,12 @@ set(TESTS
 )
 
 foreach(TEST ${TESTS})
-  add_executable(${TEST} ${TEST}.cc ${COMMON_SRCS})
+  if (${TEST} STREQUAL "test_loaded_latency")
+    file(GLOB WORKER_SRCS worker_kernels_delay_bandwidth_*.cc)
+  else()
+    set(WORKER_SRCS "")
+  endif()
+  add_executable(${TEST} ${TEST}.cc ${COMMON_SRCS} ${WORKER_SRCS})
   target_link_libraries(${TEST} boost_program_options numa pthread)
 endforeach()
 

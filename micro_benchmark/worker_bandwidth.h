@@ -8,11 +8,9 @@
 
 #include "lib_mem_region.h"
 #include "lib_timing.h"
-#include "worker_kernels.h"
-
+#include "worker_common.h"
 
 namespace mm_worker {
-
 
 void bw_sequential(
     kernel_function kernel,

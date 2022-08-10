@@ -10,6 +10,8 @@
 #include "lib_mem_region.h"
 #include "lib_timing.h"
 #include "worker_bandwidth.h"
+#include "worker_kernels_delay_bandwidth.h"
+#include "worker_kernels_latency.h"
 #include "worker_latency.h"
 
 void measure_loaded_latency(
@@ -27,6 +29,7 @@ void measure_loaded_latency(
     // latency thread
     workers[0] = std::make_shared<std::thread>(
         mm_worker::lat_ptr,
+        mm_worker::kernel_lat,
         regions[0],
         config.target_duration_s,
         &finished_bytes[0],

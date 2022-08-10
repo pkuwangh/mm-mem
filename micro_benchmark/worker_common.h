@@ -1,6 +1,17 @@
 #ifndef __WORKER_COMMON_H__
 #define __WORKER_COMMON_H__
 
+#include <cstdint>
+#include <functional>
+
+namespace mm_worker {
+
+using kernel_function = std::function<void(uint64_t&, uint64_t*&)>;
+
+// dummy one for invalid configs
+void kernel_dummy(uint64_t& ret, uint64_t*& p);
+
+
 #define LOOP4(x)   x x x x
 #define LOOP16(x)  LOOP4(x) LOOP4(x) LOOP4(x) LOOP4(x)
 #define LOOP64(x)  LOOP16(x) LOOP16(x) LOOP16(x) LOOP16(x)
@@ -25,5 +36,7 @@
 #define MY_NOP512()  MY_NOP256(); MY_NOP256()
 #define MY_NOP768()  MY_NOP256(); MY_NOP512()
 #define MY_NOP1024() MY_NOP512(); MY_NOP512()
+
+}
 
 #endif

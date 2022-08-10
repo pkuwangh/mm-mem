@@ -10,7 +10,7 @@
 #include "lib_mem_region.h"
 #include "lib_timing.h"
 #include "worker_bandwidth.h"
-
+#include "worker_kernels_bandwidth.h"
 
 int main(int argc, char** argv) {
     mm_utils::Configuration config(mm_utils::Testing_Type::BANDWIDTH);

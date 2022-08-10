@@ -11,6 +11,7 @@
 #include "lib_mem_region.h"
 #include "lib_timing.h"
 #include "worker_latency.h"
+#include "worker_kernels_latency.h"
 
 int main(int argc, char** argv) {
     mm_utils::Configuration config(mm_utils::Testing_Type::LATENCY);
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     for (uint32_t i = 0; i < config.num_threads; ++i) {
         workers[i] = std::make_shared<std::thread>(
             mm_worker::lat_ptr,
+            mm_worker::kernel_lat,
             regions[i],
             config.target_duration_s,
             &finished_chases[i],

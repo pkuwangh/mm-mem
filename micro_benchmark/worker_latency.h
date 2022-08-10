@@ -8,12 +8,12 @@
 
 #include "lib_mem_region.h"
 #include "lib_timing.h"
-#include "worker_kernels.h"
-
+#include "worker_common.h"
 
 namespace mm_worker {
 
 void lat_ptr(
+    kernel_function kernel,
     mm_utils::MemRegion::Handle mem_region,
     uint32_t target_duration,
     uint64_t* finished_chases,
@@ -35,9 +35,6 @@ void lat_ptr(
         chkpt_chases /= 2;      // ~2ns
     }
     mm_utils::Timer timer_exec;
-    // the action
-    std::function<void(uint64_t&, uint64_t*&)> kernel;
-    kernel = kernel_lat;
     // run
     uint64_t* const start = (uint64_t*)(mem_region->getStartPoint());
     uint64_t* p = nullptr;
