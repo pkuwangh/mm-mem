@@ -110,7 +110,7 @@ std::string Configuration::get_str_access_pattern(uint32_t x_access_pattern) {
     } else if (x_access_pattern == 1) {
         return "random in chunk";
     } else if (x_access_pattern == 2) {
-        return "random in region";
+        return "random in full region";
     } else {
         return "invalid";
     }
@@ -147,14 +147,18 @@ std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) {
 void Configuration::dump() {
     std::cout << "threads:           " << num_threads << std::endl;
     std::cout << "region size in KB: " << region_size_kb << std::endl;
-    std::cout << "chunk size in KB:  " << chunk_size_kb << std::endl;
-    std::cout << "stride size in B:  " << stride_size_b << std::endl;
-    std::cout << "access pattern:    " << access_pattern << " - ";
-    std::cout << get_str_access_pattern(access_pattern) << std::endl;
-    std::cout << "use hugepage:      " << use_hugepage << " - ";
-    std::cout << get_str_huge_page(use_hugepage) << std::endl;
-    std::cout << "read/write mix:    " << read_write_mix << " - ";
-    std::cout << get_str_rw_mix(read_write_mix) << std::endl;
+    if (testing_type_ == Testing_Type::LATENCY || testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
+        std::cout << "chunk size in KB:  " << chunk_size_kb << std::endl;
+        std::cout << "stride size in B:  " << stride_size_b << std::endl;
+        std::cout << "access pattern:    " << access_pattern << " - ";
+        std::cout << get_str_access_pattern(access_pattern) << std::endl;
+        std::cout << "use hugepage:      " << use_hugepage << " - ";
+        std::cout << get_str_huge_page(use_hugepage) << std::endl;
+    }
+    if (testing_type_ == Testing_Type::BANDWIDTH || testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
+        std::cout << "read/write mix:    " << read_write_mix << " - ";
+        std::cout << get_str_rw_mix(read_write_mix) << std::endl;
+    }
     std::cout << "target duration:   " << target_duration_s << std::endl;
 }
 
