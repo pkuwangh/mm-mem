@@ -41,7 +41,11 @@ float get_write_fraction(uint32_t read_write_mix);
 #define MN32   MN16 MN16
 #define MN48   MN16 MN32
 #define MN64   MN32 MN32
+#define MN80   MN32 MN48
+#define MN88   MN32 MN48 MN8
 #define MN96   MN32 MN64
+#define MN104  MN64 MN48 MN8
+#define MN112  MN64 MN48
 #define MN128  MN64 MN64
 #define MN160  MN64 MN96
 #define MN192  MN64 MN128

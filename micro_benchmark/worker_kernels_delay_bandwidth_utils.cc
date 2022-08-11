@@ -16,7 +16,11 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({32,   k_r1w0_s_n32});
         delays_and_kernels.push_back({48,   k_r1w0_s_n48});
         delays_and_kernels.push_back({64,   k_r1w0_s_n64});
+        delays_and_kernels.push_back({80,   k_r1w0_s_n80});
+        delays_and_kernels.push_back({88,   k_r1w0_s_n88});
         delays_and_kernels.push_back({96,   k_r1w0_s_n96});
+        delays_and_kernels.push_back({104,  k_r1w0_s_n104});
+        delays_and_kernels.push_back({112,  k_r1w0_s_n112});
         delays_and_kernels.push_back({128,  k_r1w0_s_n128});
         delays_and_kernels.push_back({160,  k_r1w0_s_n160});
         delays_and_kernels.push_back({192,  k_r1w0_s_n192});
@@ -36,7 +40,11 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({32,   k_r1w1_s_n32});
         delays_and_kernels.push_back({48,   k_r1w1_s_n48});
         delays_and_kernels.push_back({64,   k_r1w1_s_n64});
+        delays_and_kernels.push_back({80,   k_r1w1_s_n80});
+        delays_and_kernels.push_back({88,   k_r1w1_s_n88});
         delays_and_kernels.push_back({96,   k_r1w1_s_n96});
+        delays_and_kernels.push_back({104,  k_r1w1_s_n104});
+        delays_and_kernels.push_back({112,  k_r1w1_s_n112});
         delays_and_kernels.push_back({128,  k_r1w1_s_n128});
         delays_and_kernels.push_back({160,  k_r1w1_s_n160});
         delays_and_kernels.push_back({192,  k_r1w1_s_n192});
@@ -56,7 +64,11 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({32,   k_r2w1_s_n32});
         delays_and_kernels.push_back({48,   k_r2w1_s_n48});
         delays_and_kernels.push_back({64,   k_r2w1_s_n64});
+        delays_and_kernels.push_back({80,   k_r2w1_s_n80});
+        delays_and_kernels.push_back({88,   k_r2w1_s_n88});
         delays_and_kernels.push_back({96,   k_r2w1_s_n96});
+        delays_and_kernels.push_back({104,  k_r2w1_s_n104});
+        delays_and_kernels.push_back({112,  k_r2w1_s_n112});
         delays_and_kernels.push_back({128,  k_r2w1_s_n128});
         delays_and_kernels.push_back({160,  k_r2w1_s_n160});
         delays_and_kernels.push_back({192,  k_r2w1_s_n192});
@@ -76,7 +88,11 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({32,   k_r3w1_s_n32});
         delays_and_kernels.push_back({48,   k_r3w1_s_n48});
         delays_and_kernels.push_back({64,   k_r3w1_s_n64});
+        delays_and_kernels.push_back({80,   k_r3w1_s_n80});
+        delays_and_kernels.push_back({88,   k_r3w1_s_n88});
         delays_and_kernels.push_back({96,   k_r3w1_s_n96});
+        delays_and_kernels.push_back({104,  k_r3w1_s_n104});
+        delays_and_kernels.push_back({112,  k_r3w1_s_n112});
         delays_and_kernels.push_back({128,  k_r3w1_s_n128});
         delays_and_kernels.push_back({160,  k_r3w1_s_n160});
         delays_and_kernels.push_back({192,  k_r3w1_s_n192});
