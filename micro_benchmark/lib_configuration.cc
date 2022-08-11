@@ -31,7 +31,7 @@ void Configuration::add_generic_options_() {
     uint64_t default_region_size_kb = 128 * 1024;
     if (testing_type_ == Testing_Type::LATENCY) {
         default_num_threads = 1;
-        default_region_size_kb = 1024 * 1024;
+        default_region_size_kb = 512 * 1024;
     }
     po::options_description generic_options("Generic options");
     generic_options.add_options()

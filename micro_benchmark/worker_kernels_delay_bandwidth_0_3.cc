@@ -2,6 +2,6 @@
 
 namespace mm_worker {
 
-void k_r1w0_s_n1024(u64& ret, u64*& p) { LOOP256(ret += *p; p += 4; MY_NOP1024();) }
+void k_r1w0_s_n1024(u64& ret, u64*& p) { LP256(RD32; MN1024) }
 
 }

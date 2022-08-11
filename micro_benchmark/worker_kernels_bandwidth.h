@@ -11,24 +11,24 @@ namespace mm_worker {
 // peak bandwidth
 void kernel_bw_r1w0_sequential(uint64_t& ret, uint64_t*& p) {
     // 256x1
-    LOOP256(ret += *p; p += 4;)
+    LP256(RD32)
 }
 
 void kernel_bw_r1w1_sequential(uint64_t& ret, uint64_t*& p) {
     // 128x2
-    LOOP128(ret += *p; p += 4; *p = ret; p += 4;)
+    LP128(RD32 WR32)
 }
 
 void kernel_bw_r2w1_sequential(uint64_t& ret, uint64_t*& p) {
     // 64x4
-    LOOP64(LOOP3(ret += *p; p += 4;) *p = ret; p += 4;)
+    LP64(LP3(RD32) WR32)
 }
 
 void kernel_bw_r3w1_sequential(uint64_t& ret, uint64_t*& p) {
     // 42x6 + 4
-    LOOP42(LOOP5(ret += *p; p += 4;) *p = ret; p += 4;)
-    LOOP3(ret += *p; p += 4;)
-    LOOP1(*p = ret; p += 4;)
+    LP42(LP5(RD32) WR32)
+    LP3(RD32)
+    LP1(WR32)
 }
 
 

@@ -7,7 +7,7 @@ namespace mm_worker {
 
 // latency
 void kernel_lat(uint64_t& ret, uint64_t*& p) {
-    LOOP256(p = reinterpret_cast<uint64_t*>(*p);)
+    LP256(p = reinterpret_cast<uint64_t*>(*p);)
     ret += *p;
 }
 
