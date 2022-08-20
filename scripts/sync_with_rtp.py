@@ -11,7 +11,7 @@ def main(args):
     proj_name = os.path.basename(proj_path)
     target_path = os.path.join(args.target_path, proj_name)
     for hostname in args.hostname.split(','):
-        if hostname.startswith('twsh') or hostname.startswith('rtptest'):
+        if hostname.startswith('twsh') or hostname.startswith('rtpte') or hostname.startswith('deva'):
             remote_path = f'root@{hostname}:{target_path}'
         else:
             remote_path = f'{hostname}:{target_path}'

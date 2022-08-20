@@ -85,8 +85,11 @@ void k_r2w1_s_n160(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n192(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n224(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n256(uint64_t& ret, uint64_t*& p);
+void k_r2w1_s_n320(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n384(uint64_t& ret, uint64_t*& p);
+void k_r2w1_s_n448(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n512(uint64_t& ret, uint64_t*& p);
+void k_r2w1_s_n640(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n768(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n1024(uint64_t& ret, uint64_t*& p);
 

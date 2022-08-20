@@ -1,6 +1,6 @@
 #!/bin/bash
 
-../scripts/setup_hugepage.sh
+sudo ../scripts/setup_hugepage.sh
 
 ./build/micro_benchmark/test_idle_latency --region_size 524288 --access_pattern 2 --use_hugepage 2 --target_duration 10
 

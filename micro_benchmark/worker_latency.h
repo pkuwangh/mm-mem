@@ -24,7 +24,7 @@ void lat_ptr(
     const uint64_t loop_chases = 256;
     const uint64_t loop_bytes = loop_chases * mem_region->lineSize();
     const uint64_t loop_count = mem_region->activeSize() / loop_bytes;
-    uint64_t chkpt_chases = (4 << 20);  // 4ms
+    uint64_t chkpt_chases = (4 << 20);  // 4ms checkpoint if 1ns per chase
     if (mem_region->activeSize() > 32768 * 1024) {
         chkpt_chases /= 128;    // ~128ns
     } else if (mem_region->activeSize() > 2048 * 1024) {
@@ -63,12 +63,11 @@ void lat_ptr(
             break;
         }
     }
-    const float threshold = 1.01;
-    if (timer_exec.getElapsedTime() > target_duration * threshold) {
+    if (timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
         std::stringstream ss;
         ss << "elapsed time (s) exec=" << timer_exec.getElapsedTime()
            << " target=" << target_duration
-           << " num_chkpts=" << num_chkpts
+           << " latency num_chkpts=" << num_chkpts
            << " ret=" << ret << "\n";
         std::cout << ss.str();
     }

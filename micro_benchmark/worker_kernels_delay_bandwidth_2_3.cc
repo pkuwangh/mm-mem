@@ -1,3 +1,4 @@
+#include "worker_kernels_common.h"
 #include "worker_kernels_delay_bandwidth.h"
 
 namespace mm_worker {

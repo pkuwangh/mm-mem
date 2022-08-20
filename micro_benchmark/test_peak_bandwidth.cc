@@ -27,11 +27,12 @@ void measure_peak_bandwidth(
     }
     for (uint32_t i = 0; i < config.num_threads; ++i) {
         workers[i] = std::make_shared<std::thread>(
-            mm_worker::bw_sequential,
+            mm_worker::bw_sequential_no_ref,
             kernel,
             regions[i],
             read_write_mix,
             config.target_duration_s,
+            config.num_total_threads,
             config.num_threads,
             &finished_bytes[i],
             &exec_time[i]

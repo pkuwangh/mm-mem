@@ -8,6 +8,7 @@ namespace mm_utils {
 Configuration::Configuration(Testing_Type testing_type) :
     testing_type_ (testing_type)
 {
+    num_total_threads = std::thread::hardware_concurrency();
     if (testing_type == Testing_Type::LATENCY) {
         desc_ = std::make_shared<po::options_description>("Idle latency");
     } else if (testing_type == Testing_Type::BANDWIDTH) {
@@ -27,7 +28,7 @@ Configuration::Configuration(Testing_Type testing_type) :
 }
 
 void Configuration::add_generic_options_() {
-    uint32_t default_num_threads = std::thread::hardware_concurrency();
+    uint32_t default_num_threads = num_total_threads;
     uint64_t default_region_size_kb = 128 * 1024;
     if (testing_type_ == Testing_Type::LATENCY) {
         default_num_threads = 1;
@@ -74,7 +75,7 @@ void Configuration::add_latency_options_() {
 }
 
 void Configuration::add_bandwidth_options_() {
-    uint32_t default_read_write_mix = 0;
+    uint32_t default_read_write_mix = 2;
     std::string additional_msg = "";
     if (testing_type_ == Testing_Type::BANDWIDTH) {
         default_read_write_mix = 100;

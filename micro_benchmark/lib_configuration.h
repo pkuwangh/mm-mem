@@ -30,6 +30,7 @@ class Configuration {
     std::string get_str_huge_page(uint32_t x_huge_page);
     std::string get_str_rw_mix(uint32_t x_rw_mix);
 
+    uint32_t num_total_threads = 0;
     uint32_t num_threads = 1;
     uint64_t region_size_kb = 128 * 1024;
     uint32_t access_pattern = 1;

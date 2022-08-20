@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "worker_common.h"
+#include "worker_kernels_common.h"
 
 namespace mm_worker {
 

@@ -17,13 +17,24 @@ void bw_sequential(
     mm_utils::MemRegion::Handle mem_region,
     uint32_t read_write_mix,
     uint32_t target_duration,
+    uint32_t ref_total_bw_gbps,
     uint32_t num_total_threads,
+    uint32_t num_threads,
     uint64_t* finished_bytes,
     double* exec_time
 ) {
     // setup checkpoint
     int64_t target_duration_ns = static_cast<int64_t>(target_duration) * 1000000000;
-    const uint64_t chkpt_bytes = 256 * 1024 * 1024 / num_total_threads;
+    uint64_t per_core_bw_mbps = 0;
+    if (ref_total_bw_gbps > 0) {
+        // actual per-core BW that varies with delays
+        per_core_bw_mbps = ref_total_bw_gbps * 1024 / num_threads;
+    } else {
+        // assume ~2GB/s-per-core provisioned BW
+        per_core_bw_mbps = 2 * 1024 * num_total_threads / num_threads;
+    }
+    // to get 4ms checkpoint
+    const uint64_t chkpt_bytes = per_core_bw_mbps * 1024 * 1024 * 4 / 1000;
     const uint64_t loop_bytes = 256 * 32;
     const uint64_t loop_count = mem_region->activeSize() / loop_bytes;
     mm_utils::Timer timer_exec;
@@ -57,17 +68,40 @@ void bw_sequential(
             break;
         }
     }
-    const float threshold = 1.01;
-    if (timer_exec.getElapsedTime() > target_duration * threshold) {
+    if (timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
         std::stringstream ss;
         ss << "elapsed time (s) exec=" << timer_exec.getElapsedTime()
            << " target=" << target_duration
-           << " num_chkpts=" << num_chkpts
+           << " bandwidth num_chkpts=" << num_chkpts
            << " ret=" << ret << "\n";
         std::cout << ss.str();
     }
     *exec_time = timer_exec.getElapsedTime();
     *finished_bytes += *finished_bytes * write_fraction;
+}
+
+
+void bw_sequential_no_ref(
+    kernel_function kernel,
+    mm_utils::MemRegion::Handle mem_region,
+    uint32_t read_write_mix,
+    uint32_t target_duration,
+    uint32_t num_total_threads,
+    uint32_t num_threads,
+    uint64_t* finished_bytes,
+    double* exec_time
+) {
+    const uint32_t ref_total_bw_gbps = 0;
+    bw_sequential(
+        kernel,
+        mem_region,
+        read_write_mix,
+        target_duration,
+        ref_total_bw_gbps,
+        num_total_threads,
+        num_threads,
+        finished_bytes,
+        exec_time);
 }
 
 }
