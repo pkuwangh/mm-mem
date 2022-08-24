@@ -3,7 +3,7 @@ Memory benchmarking and characterization tools
 
 ## Build
 ```
-  ./scripts/build_deps.py
+  ./scripts/install_deps.py
   cd local_build/
   make
 ```
