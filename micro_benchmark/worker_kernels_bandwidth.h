@@ -1,8 +1,8 @@
 #ifndef __WORKER_KERNELS_BW_H__
 #define __WORKER_KERNELS_BW_H__
 
+#include <list>
 #include <tuple>
-#include <vector>
 
 #include "worker_common.h"
 #include "worker_kernels_common.h"
@@ -34,7 +34,7 @@ void kernel_bw_r3w1_sequential(uint64_t& ret, uint64_t*& p) {
 
 
 void get_kernels_with_wrmix(
-    std::vector<std::tuple<uint32_t, kernel_function>>& rwmix_and_kernels,
+    std::list<std::tuple<uint32_t, kernel_function>>& rwmix_and_kernels,
     uint32_t read_write_mix
 ) {
     if (read_write_mix == 0) {

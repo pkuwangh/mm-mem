@@ -68,7 +68,8 @@ void bw_sequential(
             break;
         }
     }
-    if (timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
+    if (ref_total_bw_gbps > 0 &&
+        timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
         std::stringstream ss;
         ss << "elapsed time (s) exec=" << timer_exec.getElapsedTime()
            << " target=" << target_duration

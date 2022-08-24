@@ -3,7 +3,7 @@
 namespace mm_worker {
 
 void get_kernels_with_delays(
-    std::vector<std::tuple<uint32_t, kernel_function>>& delays_and_kernels,
+    std::list<std::tuple<uint32_t, kernel_function>>& delays_and_kernels,
     uint32_t read_write_mix
 ) {
     if (read_write_mix == 0) {

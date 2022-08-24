@@ -16,6 +16,7 @@ void lat_ptr(
     kernel_function kernel,
     mm_utils::MemRegion::Handle mem_region,
     uint32_t target_duration,
+    uint32_t ref_latency_ns,
     uint64_t* finished_chases,
     double* exec_time
 ) {
@@ -25,14 +26,18 @@ void lat_ptr(
     const uint64_t loop_bytes = loop_chases * mem_region->lineSize();
     const uint64_t loop_count = mem_region->activeSize() / loop_bytes;
     uint64_t chkpt_chases = (4 << 20);  // 4ms checkpoint if 1ns per chase
-    if (mem_region->activeSize() > 32768 * 1024) {
-        chkpt_chases /= 128;    // ~128ns
-    } else if (mem_region->activeSize() > 2048 * 1024) {
-        chkpt_chases /= 32;     // ~32ns
-    } else if (mem_region->activeSize() > 32 * 1024) {
-        chkpt_chases /= 8;      // ~8ns
+    if (ref_latency_ns > 0) {
+        chkpt_chases /= ref_latency_ns;
     } else {
-        chkpt_chases /= 2;      // ~2ns
+        if (mem_region->activeSize() > 32768 * 1024) {
+            chkpt_chases /= 128;    // ~128ns
+        } else if (mem_region->activeSize() > 2048 * 1024) {
+            chkpt_chases /= 32;     // ~32ns
+        } else if (mem_region->activeSize() > 32 * 1024) {
+            chkpt_chases /= 8;      // ~8ns
+        } else {
+            chkpt_chases /= 2;      // ~2ns
+        }
     }
     mm_utils::Timer timer_exec;
     // run
@@ -63,7 +68,8 @@ void lat_ptr(
             break;
         }
     }
-    if (timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
+    if (ref_latency_ns > 0 &&
+        timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
         std::stringstream ss;
         ss << "elapsed time (s) exec=" << timer_exec.getElapsedTime()
            << " target=" << target_duration
@@ -72,6 +78,24 @@ void lat_ptr(
         std::cout << ss.str();
     }
     *exec_time = timer_exec.getElapsedTime();
+}
+
+
+void lat_ptr_no_ref(
+    kernel_function kernel,
+    mm_utils::MemRegion::Handle mem_region,
+    uint32_t target_duration,
+    uint64_t* finished_chases,
+    double* exec_time
+) {
+    const uint32_t ref_latency_ns = 0;
+    lat_ptr(
+        kernel,
+        mem_region,
+        target_duration,
+        ref_latency_ns,
+        finished_chases,
+        exec_time);
 }
 
 }

@@ -1,8 +1,8 @@
 #ifndef __WORKER_KERNELS_DELAY_BW_H__
 #define __WORKER_KERNELS_DELAY_BW_H__
 
+#include <list>
 #include <tuple>
-#include <vector>
 
 #include "worker_common.h"
 
@@ -12,7 +12,7 @@ using u64 = uint64_t;
 
 // variable bandwidth for loaded latency
 void get_kernels_with_delays(
-    std::vector<std::tuple<uint32_t, kernel_function>>& delays_and_kernels,
+    std::list<std::tuple<uint32_t, kernel_function>>& delays_and_kernels,
     uint32_t read_write_mix
 );
 
