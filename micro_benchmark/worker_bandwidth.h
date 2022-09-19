@@ -81,30 +81,6 @@ void bw_sequential(
     *finished_bytes += *finished_bytes * write_fraction;
 }
 
-
-void bw_sequential_no_ref(
-    kernel_function kernel,
-    mm_utils::MemRegion::Handle mem_region,
-    uint32_t read_write_mix,
-    uint32_t target_duration,
-    uint32_t num_total_threads,
-    uint32_t num_threads,
-    uint64_t* finished_bytes,
-    double* exec_time
-) {
-    const uint32_t ref_total_bw_gbps = 0;
-    bw_sequential(
-        kernel,
-        mem_region,
-        read_write_mix,
-        target_duration,
-        ref_total_bw_gbps,
-        num_total_threads,
-        num_threads,
-        finished_bytes,
-        exec_time);
-}
-
 }
 
 #endif

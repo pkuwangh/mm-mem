@@ -15,6 +15,7 @@ enum class Testing_Type : int {
     LATENCY,
     BANDWIDTH,
     LATENCY_BANDWIDTH,
+    MEMCPY,
 };
 
 
@@ -36,6 +37,7 @@ class Configuration {
     uint32_t access_pattern = 1;
     uint32_t chunk_size_kb = 128;
     uint32_t stride_size_b = 64;
+    uint64_t fragment_size_b = 4096;
     uint32_t use_hugepage = 0;
     uint32_t read_write_mix = 0;
     uint32_t target_duration_s = 10;
@@ -47,6 +49,7 @@ class Configuration {
     void add_generic_options_();
     void add_latency_options_();
     void add_bandwidth_options_();
+    void add_memcpy_options_();
 };
 
 }

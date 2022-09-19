@@ -4,6 +4,7 @@ set(TESTS
   "test_peak_bandwidth"
   "test_idle_latency"
   "test_loaded_latency"
+  "test_memcpy"
 )
 
 foreach(TEST ${TESTS})

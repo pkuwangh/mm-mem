@@ -53,7 +53,7 @@ uint32_t measure_peak_bandwidth(
     double mem_bw_mbps = mem_bw / 1024 / 1024;
     double mem_bw_gbps = mem_bw_mbps / 1024;
     if (last_measured_bw_gbps > 0) {
-        std::cout << std::setw(20) << config.get_str_rw_mix(read_write_mix) << " : ";
+        std::cout << std::setw(20) << config.get_str_rw_mix(read_write_mix) << " :";
         std::cout << std::setprecision(7) << std::setw(10) << mem_bw_mbps << " MB/s | ";
         std::cout << std::setprecision(4) << std::setw(7) << mem_bw_gbps << " GB/s";
         std::cout << std::endl;

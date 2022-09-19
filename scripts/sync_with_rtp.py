@@ -11,14 +11,19 @@ def main(args):
     proj_name = os.path.basename(proj_path)
     target_path = os.path.join(args.target_path, proj_name)
     for hostname in args.hostname.split(','):
-        if hostname.startswith('twsh') or hostname.startswith('rtpte') or hostname.startswith('deva'):
-            remote_path = f'root@{hostname}:{target_path}'
+        if '.' in hostname:
+            remote_name = f'root@{hostname}'
         else:
-            remote_path = f'{hostname}:{target_path}'
+            remote_name = hostname
+        remote_path = f'{remote_name}:{target_path}'
+        # create target dir
+        if not args.download:
+            cmd = ['ssh', remote_name, 'mkdir', '-p', target_path]
+            exec_cmd(cmd, for_real=True, print_cmd=True)
         # copy the repo myself
         if args.download:
             cmd = [
-                'rsync', '-rvl',
+                'rsync', '-rl',
                 '--exclude', '.*swp',
                 '--exclude', '__pycache__',
                 '--exclude', 'build',
@@ -26,7 +31,7 @@ def main(args):
             ]
         else:
             cmd = [
-                'rsync', '-rvl',
+                'rsync', '-rl',
                 '--exclude', '.*swp',
                 '--exclude', '__pycache__',
                 '--exclude', 'build',

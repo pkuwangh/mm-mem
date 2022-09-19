@@ -3,12 +3,8 @@
 
 namespace mm_worker {
 
-void k_r2w1_s_n160 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN160)) }
-void k_r2w1_s_n192 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN192)) }
-void k_r2w1_s_n224 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN224)) }
-void k_r2w1_s_n256 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN256)) }
-void k_r2w1_s_n320 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN320)) }
-void k_r2w1_s_n384 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN384)) }
-void k_r2w1_s_n448 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN448)) }
+void k_r2w1_s_n104 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN104)) }
+void k_r2w1_s_n112 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN112)) }
+void k_r2w1_s_n128 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN128)) }
 
 }

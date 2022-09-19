@@ -15,8 +15,5 @@ void k_r3w1_s_n64  (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN64) ) LP3(RD3
 void k_r3w1_s_n80  (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN80) ) LP3(RD32) LP1(WR32) LP4(MN80) }
 void k_r3w1_s_n88  (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN88) ) LP3(RD32) LP1(WR32) LP4(MN88) }
 void k_r3w1_s_n96  (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN96) ) LP3(RD32) LP1(WR32) LP4(MN96) }
-void k_r3w1_s_n104 (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN104)) LP3(RD32) LP1(WR32) LP4(MN104) }
-void k_r3w1_s_n112 (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN112)) LP3(RD32) LP1(WR32) LP4(MN112) }
-void k_r3w1_s_n128 (u64& ret, u64*& p) { LP42(LP5(RD32) WR32 LP8(MN128)) LP3(RD32) LP1(WR32) LP4(MN128) }
 
 }

@@ -15,8 +15,5 @@ void k_r1w0_s_n64  (u64& ret, u64*& p) { LP256(RD32 MN64) }
 void k_r1w0_s_n80  (u64& ret, u64*& p) { LP256(RD32 MN80) }
 void k_r1w0_s_n88  (u64& ret, u64*& p) { LP256(RD32 MN88) }
 void k_r1w0_s_n96  (u64& ret, u64*& p) { LP256(RD32 MN96) }
-void k_r1w0_s_n104 (u64& ret, u64*& p) { LP256(RD32 MN104) }
-void k_r1w0_s_n112 (u64& ret, u64*& p) { LP256(RD32 MN112) }
-void k_r1w0_s_n128 (u64& ret, u64*& p) { LP256(RD32 MN128) }
 
 }

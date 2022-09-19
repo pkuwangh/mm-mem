@@ -16,6 +16,9 @@ Configuration::Configuration(Testing_Type testing_type) :
     } else if (testing_type == Testing_Type::LATENCY_BANDWIDTH) {
         desc_ = std::make_shared<po::options_description>(
             "Loaded latency; 1 latency thread + n-1 bandwidth threads");
+    } else if (testing_type == Testing_Type::MEMCPY) {
+        desc_ = std::make_shared<po::options_description>(
+            "Memcpy (glibc)");
     }
 
     add_generic_options_();
@@ -24,6 +27,9 @@ Configuration::Configuration(Testing_Type testing_type) :
     }
     if (testing_type == Testing_Type::BANDWIDTH || testing_type == Testing_Type::LATENCY_BANDWIDTH) {
         add_bandwidth_options_();
+    }
+    if (testing_type == Testing_Type::MEMCPY) {
+        add_memcpy_options_();
     }
 }
 
@@ -94,6 +100,19 @@ void Configuration::add_bandwidth_options_() {
     desc_->add(bandwidth_options);
 }
 
+void Configuration::add_memcpy_options_() {
+    uint64_t default_fragment_size = 0;
+    po::options_description memcpy_options("Memcpy options");
+    memcpy_options.add_options()
+        ("fragment_size,f",
+            po::value(&fragment_size_b)->default_value(default_fragment_size),
+            ("fragment size in byte of each memcpy invocation"
+             "\n  0 - same as region size"
+             "\n  e.g. 4096 - copy each 4KB fragment one by one"))
+        ;
+    desc_->add(memcpy_options);
+}
+
 int Configuration::parse_options(int argc, char** argv) {
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(*desc_).run(), vm);
@@ -159,6 +178,9 @@ void Configuration::dump() {
     if (testing_type_ == Testing_Type::BANDWIDTH || testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
         std::cout << "read/write mix:    " << read_write_mix << " - ";
         std::cout << get_str_rw_mix(read_write_mix) << std::endl;
+    }
+    if (testing_type_ == Testing_Type::MEMCPY) {
+        std::cout << "fragment size in B: " << fragment_size_b << std::endl;
     }
     std::cout << "target duration:   " << target_duration_s << std::endl;
 }

@@ -1,7 +1,6 @@
 #ifndef __WORKER_LATENCY_H__
 #define __WORKER_LATENCY_H__
 
-#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -78,24 +77,6 @@ void lat_ptr(
         std::cout << ss.str();
     }
     *exec_time = timer_exec.getElapsedTime();
-}
-
-
-void lat_ptr_no_ref(
-    kernel_function kernel,
-    mm_utils::MemRegion::Handle mem_region,
-    uint32_t target_duration,
-    uint64_t* finished_chases,
-    double* exec_time
-) {
-    const uint32_t ref_latency_ns = 0;
-    lat_ptr(
-        kernel,
-        mem_region,
-        target_duration,
-        ref_latency_ns,
-        finished_chases,
-        exec_time);
 }
 
 }

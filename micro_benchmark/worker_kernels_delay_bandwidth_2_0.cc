@@ -15,8 +15,5 @@ void k_r2w1_s_n64  (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN64)) }
 void k_r2w1_s_n80  (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN80)) }
 void k_r2w1_s_n88  (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN88)) }
 void k_r2w1_s_n96  (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN96)) }
-void k_r2w1_s_n104 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN104)) }
-void k_r2w1_s_n112 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN112)) }
-void k_r2w1_s_n128 (u64& ret, u64*& p) { LP64(LP3(RD32) WR32 LP6(MN128)) }
 
 }

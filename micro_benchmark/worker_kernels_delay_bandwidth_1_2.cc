@@ -3,7 +3,8 @@
 
 namespace mm_worker {
 
-void k_r1w1_s_n512 (u64& ret, u64*& p) { LP128(RD32 WR32 LP4(MN512)) }
-void k_r1w1_s_n768 (u64& ret, u64*& p) { LP128(RD32 WR32 LP4(MN768)) }
+void k_r1w1_s_n160 (u64& ret, u64*& p) { LP128(RD32 WR32 LP4(MN160)) }
+void k_r1w1_s_n192 (u64& ret, u64*& p) { LP128(RD32 WR32 LP4(MN192)) }
+void k_r1w1_s_n224 (u64& ret, u64*& p) { LP128(RD32 WR32 LP4(MN224)) }
 
 }
