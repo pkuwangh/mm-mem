@@ -17,7 +17,7 @@ uint32_t measure_idle_latency(
     mm_utils::Configuration& config,
     std::vector<mm_utils::MemRegion::Handle>& regions,
     std::vector<std::shared_ptr<std::thread>>& workers,
-    uint32_t last_measured_lat_ns
+    uint32_t last_measured_lat_ps
 ) {
     std::vector<uint64_t> finished_chases(config.num_threads, 0);
     std::vector<double> exec_time(config.num_threads, 0);
@@ -26,8 +26,8 @@ uint32_t measure_idle_latency(
             mm_worker::lat_ptr,
             mm_worker::kernel_lat,
             regions[i],
-            (last_measured_lat_ns > 0) ? config.target_duration_s : 1,
-            last_measured_lat_ns,
+            (last_measured_lat_ps > 0) ? config.target_duration_s : 1,
+            last_measured_lat_ps,
             &finished_chases[i],
             &exec_time[i]
         );
@@ -40,12 +40,14 @@ uint32_t measure_idle_latency(
         total_chases += finished_chases[i];
         total_exec_time += exec_time[i];
     }
+    std::cout << total_exec_time << std::endl;
+    std::cout << total_chases << std::endl;
     double latency = total_exec_time * 1e9 / total_chases;
-    if (last_measured_lat_ns > 0) {
+    if (last_measured_lat_ps > 0) {
         std::cout << "Idle Latency: " << std::setprecision(4) << latency << " ns";
         std::cout << std::endl;
     }
-    return static_cast<uint32_t>(latency);
+    return static_cast<uint32_t>(latency * 1e3);
 }
 
 
@@ -77,9 +79,9 @@ int main(int argc, char** argv) {
         // regions[i]->dump();
     }
     std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    uint32_t last_lat_ns = 0;
-    last_lat_ns = measure_idle_latency(config, regions, workers, last_lat_ns);
-    measure_idle_latency(config, regions, workers, last_lat_ns);
+    uint32_t last_lat_ps = 0;
+    last_lat_ps = measure_idle_latency(config, regions, workers, last_lat_ps);
+    measure_idle_latency(config, regions, workers, last_lat_ps);
     std::cout << std::endl;
     return 0;
 }

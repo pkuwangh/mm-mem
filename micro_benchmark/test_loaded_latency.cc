@@ -19,7 +19,7 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     mm_utils::Configuration& config,
     std::vector<mm_utils::MemRegion::Handle>& regions,
     std::vector<std::shared_ptr<std::thread>>& workers,
-    uint32_t last_measured_lat_ns,
+    uint32_t last_measured_lat_ps,
     uint32_t last_measured_bw_gbps,
     uint32_t delay,
     mm_worker::kernel_function& kernel
@@ -34,8 +34,8 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
         mm_worker::lat_ptr,
         mm_worker::kernel_lat,
         regions[0],
-        (last_measured_lat_ns > 0) ? config.target_duration_s : 1,
-        last_measured_lat_ns,
+        (last_measured_lat_ps > 0) ? config.target_duration_s : 1,
+        last_measured_lat_ps,
         &finished_bytes[0],
         &exec_time[0]
     );
@@ -68,14 +68,14 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     double latency = latency_exec_time * 1e9 / latency_chases;
     double mem_bw = total_bytes / total_exec_time * config.num_threads;
     double mem_bw_gbps = mem_bw / 1024 / 1024 / 1024;
-    if (last_measured_lat_ns > 0 || last_measured_bw_gbps > 0) {
+    if (last_measured_lat_ps > 0 || last_measured_bw_gbps > 0) {
         std::cout << std::setw(12) << delay;
         std::cout << std::setw(12) << std::fixed << std::setprecision(1) << mem_bw_gbps;
         std::cout << std::setw(12) << std::fixed << std::setprecision(1) << latency;
         std::cout << std::endl;
     }
     return std::make_tuple(
-        static_cast<uint32_t>(latency), static_cast<uint32_t>(mem_bw_gbps));
+        static_cast<uint32_t>(latency * 1e3), static_cast<uint32_t>(mem_bw_gbps));
 }
 
 
@@ -116,14 +116,14 @@ int main(int argc, char** argv) {
     std::cout << std::setw(12) << "delay";
     std::cout << std::setw(12) << "bandwidth";
     std::cout << std::setw(12) << "latency" << std::endl;
-    uint32_t last_lat_ns = 0;
+    uint32_t last_lat_ps = 0;
     uint32_t last_bw_gbps = 0;
     delays_and_kernels.push_front(delays_and_kernels.front());
     for (auto& item : delays_and_kernels) {
         uint32_t delay = std::get<0>(item);
         mm_worker::kernel_function& kernel = std::get<1>(item);
-        std::tie(last_lat_ns, last_bw_gbps) = measure_loaded_latency(
-            config, regions, workers, last_lat_ns, last_bw_gbps, delay, kernel);
+        std::tie(last_lat_ps, last_bw_gbps) = measure_loaded_latency(
+            config, regions, workers, last_lat_ps, last_bw_gbps, delay, kernel);
     }
     std::cout << std::endl;
     return 0;

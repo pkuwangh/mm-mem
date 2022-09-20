@@ -15,7 +15,7 @@ void lat_ptr(
     kernel_function kernel,
     mm_utils::MemRegion::Handle mem_region,
     uint32_t target_duration,
-    uint32_t ref_latency_ns,
+    uint32_t ref_latency_ps,
     uint64_t* finished_chases,
     double* exec_time
 ) {
@@ -25,8 +25,8 @@ void lat_ptr(
     const uint64_t loop_bytes = loop_chases * mem_region->lineSize();
     const uint64_t loop_count = mem_region->activeSize() / loop_bytes;
     uint64_t chkpt_chases = (4 << 20);  // 4ms checkpoint if 1ns per chase
-    if (ref_latency_ns > 0) {
-        chkpt_chases /= ref_latency_ns;
+    if (ref_latency_ps > 0) {
+        chkpt_chases = chkpt_chases / ref_latency_ps * 1000;
     } else {
         if (mem_region->activeSize() > 32768 * 1024) {
             chkpt_chases /= 128;    // ~128ns
@@ -67,7 +67,7 @@ void lat_ptr(
             break;
         }
     }
-    if (ref_latency_ns > 0 &&
+    if (ref_latency_ps > 0 &&
         timer_exec.getElapsedTime() > target_duration * TIMER_THRESHOLD) {
         std::stringstream ss;
         ss << "elapsed time (s) exec=" << timer_exec.getElapsedTime()

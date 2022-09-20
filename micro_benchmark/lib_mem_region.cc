@@ -4,10 +4,13 @@
 #include <iomanip>
 #include <string>
 #include <fcntl.h>      // open
-#include <numa.h>       // numa_*
-#include <numaif.h>     // move_pages
 #include <unistd.h>     // getpaegsize
 #include <sys/mman.h>   // mmap
+
+#if __linux__
+#include <numa.h>       // numa_*
+#include <numaif.h>     // move_pages
+#endif
 
 #include "lib_mem_region.h"
 
@@ -84,6 +87,7 @@ void MemRegion::error_(std::string message) {
 char* MemRegion::allocNative_(const uint64_t& size, char*& raw_addr, uint64_t& raw_size) {
     char* addr = NULL;
     if (hugepage_type_ > HugePageType::NONE) {
+#if __linux__
         int hugepage_size = 0;
         if (hugepage_type_ == HugePageType::HGPG_2MB) {
             hugepage_size = 21;
@@ -96,6 +100,14 @@ char* MemRegion::allocNative_(const uint64_t& size, char*& raw_addr, uint64_t& r
             MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | (hugepage_size << MAP_HUGE_SHIFT),
             0, 0
         ));
+#else
+        addr = ((char*)mmap(
+            0x0, size,
+            PROT_READ | PROT_WRITE,
+            MAP_PRIVATE | MAP_ANONYMOUS,    // TODO
+            0, 0
+        ));
+#endif
         // std::cout << "native hugepage" << std::endl;
         if ((int64_t)addr == (int64_t)-1) {
             error_("mmap failed for hugepage");
@@ -116,11 +128,12 @@ char* MemRegion::allocNumaAware_(const uint64_t& size, char*& raw_addr, uint64_t
     if (hugepage_type_ > HugePageType::NONE) {
         error_("not yet support hugepage to be numa-aware");
     } else {
+        raw_size = size + os_page_size_;
+#if __linux__
+        raw_addr = (char*)aligned_alloc(numa_pagesize(), raw_size);
         unsigned long num_nodes = numa_max_node() + 1;
         unsigned long maxnode = num_nodes + 1;  // tihs seems to be a kernel/documentaion bug
         int mbind_ret = 0;
-        raw_size = size + os_page_size_;
-        raw_addr = (char*)aligned_alloc(numa_pagesize(), raw_size);
         if (mem_type_ == MemType::NODE0) {
             // raw_addr = (char*)numa_alloc_onnode(raw_size, 0);
             unsigned long nodemask = ((unsigned long)1 << 0);
@@ -139,6 +152,10 @@ char* MemRegion::allocNumaAware_(const uint64_t& size, char*& raw_addr, uint64_t
         if (mbind_ret < 0) {
             error_("mbind error");
         }
+#else
+        raw_addr = (char*)aligned_alloc(os_page_size_, raw_size);
+        // TODO
+#endif
         addr = raw_addr + os_page_size_ - (uint64_t)raw_addr % os_page_size_;
         // std::cout << "numa_malloc" << std::endl;
     }
@@ -220,6 +237,7 @@ void MemRegion::all_random_init() {
 
 // migrate pages to another node
 void MemRegion::migratePages_(char*& addr, uint64_t size, int target_node) {
+#if __linux__
     const bool verbose = true;
     uint32_t num_os_pages = size / os_page_size_;
     void** pages = (void**)malloc(sizeof(char*) * num_os_pages);
@@ -269,6 +287,7 @@ void MemRegion::migratePages_(char*& addr, uint64_t size, int target_node) {
             }
         }
     }
+#endif
 }
 
 void MemRegion::dump()
