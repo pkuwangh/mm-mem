@@ -16,6 +16,7 @@ enum class Testing_Type : int {
     BANDWIDTH,
     LATENCY_BANDWIDTH,
     MEMCPY,
+    BRANCH_THROUGHPUT,
 };
 
 

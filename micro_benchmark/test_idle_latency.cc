@@ -1,8 +1,8 @@
+#include <cassert>
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <cassert>
-#include <cstdint>
 #include <thread>
 #include <vector>
 #include <boost/program_options.hpp>
@@ -40,8 +40,6 @@ uint32_t measure_idle_latency(
         total_chases += finished_chases[i];
         total_exec_time += exec_time[i];
     }
-    std::cout << total_exec_time << std::endl;
-    std::cout << total_chases << std::endl;
     double latency = total_exec_time * 1e9 / total_chases;
     if (last_measured_lat_ps > 0) {
         std::cout << "Idle Latency: " << std::setprecision(4) << latency << " ns";

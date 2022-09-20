@@ -5,6 +5,7 @@ set(TESTS
   "test_idle_latency"
   "test_loaded_latency"
   "test_memcpy"
+  "test_branch_throughput"
 )
 
 foreach(TEST ${TESTS})

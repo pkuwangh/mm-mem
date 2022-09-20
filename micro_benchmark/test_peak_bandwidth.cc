@@ -1,9 +1,9 @@
-#include <iomanip>
-#include <iostream>
-#include <string>
 #include <cassert>
 #include <cstdint>
+#include <iomanip>
+#include <iostream>
 #include <list>
+#include <string>
 #include <thread>
 #include <vector>
 #include <boost/program_options.hpp>

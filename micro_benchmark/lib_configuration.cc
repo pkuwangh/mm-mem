@@ -9,17 +9,19 @@ Configuration::Configuration(Testing_Type testing_type) :
     testing_type_ (testing_type)
 {
     num_total_threads = std::thread::hardware_concurrency();
+    std::string test_name;
     if (testing_type == Testing_Type::LATENCY) {
-        desc_ = std::make_shared<po::options_description>("Idle latency");
+        test_name = "Idle latency";
     } else if (testing_type == Testing_Type::BANDWIDTH) {
-        desc_ = std::make_shared<po::options_description>("Peak bandwidth");
+        test_name = "Peak bandwidth";
     } else if (testing_type == Testing_Type::LATENCY_BANDWIDTH) {
-        desc_ = std::make_shared<po::options_description>(
-            "Loaded latency; 1 latency thread + n-1 bandwidth threads");
+        test_name = "Loaded latency; 1 latency thread + n-1 bandwidth threads";
     } else if (testing_type == Testing_Type::MEMCPY) {
-        desc_ = std::make_shared<po::options_description>(
-            "Memcpy (glibc)");
+        test_name = "Memcpy (glibc)";
+    } else if (testing_type == Testing_Type::BRANCH_THROUGHPUT) {
+        test_name = "Branch taken throughput";
     }
+    desc_ = std::make_shared<po::options_description>(test_name);
 
     add_generic_options_();
     if (testing_type == Testing_Type::LATENCY || testing_type == Testing_Type::LATENCY_BANDWIDTH) {
@@ -40,18 +42,25 @@ void Configuration::add_generic_options_() {
         default_num_threads = 1;
         default_region_size_kb = 512 * 1024;
     }
+    if (testing_type_ == Testing_Type::BRANCH_THROUGHPUT) {
+        default_num_threads = 1;
+    }
     po::options_description generic_options("Generic options");
     generic_options.add_options()
         ("help,h", "print usage message")
+        ("target_duration,t",
+            po::value(&target_duration_s)->default_value(10), "duration")
         ("num_threads,n",
             po::value(&num_threads)->default_value(default_num_threads),
             "total number of threads")
-        ("region_size,b",
-            po::value(&region_size_kb)->default_value(default_region_size_kb),
-            "region size in KB")
-        ("target_duration,t",
-            po::value(&target_duration_s)->default_value(10), "duration")
-        ;
+       ;
+    if (testing_type_ < Testing_Type::BRANCH_THROUGHPUT) {
+        generic_options.add_options()
+            ("region_size,b",
+                po::value(&region_size_kb)->default_value(default_region_size_kb),
+                "region size in KB")
+            ;
+    }
     desc_->add(generic_options);
 }
 
@@ -166,7 +175,9 @@ std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) {
 
 void Configuration::dump() {
     std::cout << "threads:           " << num_threads << std::endl;
-    std::cout << "region size in KB: " << region_size_kb << std::endl;
+    if (testing_type_ < Testing_Type::BRANCH_THROUGHPUT) {
+        std::cout << "region size in KB: " << region_size_kb << std::endl;
+    }
     if (testing_type_ == Testing_Type::LATENCY || testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
         std::cout << "chunk size in KB:  " << chunk_size_kb << std::endl;
         std::cout << "stride size in B:  " << stride_size_b << std::endl;
