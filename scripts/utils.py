@@ -36,7 +36,7 @@ def run_proc(
     for_real: bool,
     print_cmd: bool = True,
 ) -> Optional[str]:
-    env_setting = [f'{k}={v}' for k,v in env.items()]
+    env_setting = [f"{k}={v}" for k,v in env.items()]
     if print_cmd:
         print(' '.join(env_setting + cmd))
     exec_env = os.environ.copy()
@@ -44,14 +44,14 @@ def run_proc(
         for k, v in env.items():
             exec_env[k] = v
         if outfile:
-            with open(outfile, 'wt') as fp:
+            with open(outfile, "wt") as fp:
                 proc = _launch_proc(cmd, cwd, fp, fp, exec_env)
                 proc.wait()
             return None
         else:
             proc = _launch_proc(cmd, cwd, subprocess.PIPE, subprocess.STDOUT, exec_env)
             (stdout, _) = proc.communicate()
-            return stdout.decode('utf-8')
+            return stdout.decode("utf-8")
     return None
 
 
@@ -60,11 +60,12 @@ def run_proc_simple(
     for_real: bool,
     print_cmd: bool = True,
 ) -> Optional[str]:
-    return run_proc(cmd, '.', {}, None, for_real, print_cmd)
+    return run_proc(cmd, ".", {}, None, for_real, print_cmd)
 
 
 def read_env() -> Dict[str, str]:
     # default env values
     env_vars = {}
-    env_vars['ROOT'] = '/'.join(os.path.abspath(__file__).split('/')[:-2])
+    env_vars["ROOT"] = '/'.join(os.path.abspath(__file__).split('/')[:-2])
+    env_vars["HOME"] = os.getenv("HOME")
     return env_vars
