@@ -4,6 +4,8 @@ project(MM_MEM)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-Wall")
-set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-add_subdirectory(micro_benchmark)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(common)
+add_subdirectory(cpu_micro)
