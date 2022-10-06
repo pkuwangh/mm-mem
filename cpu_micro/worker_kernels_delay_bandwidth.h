@@ -3,121 +3,61 @@
 
 #include <list>
 #include <tuple>
+#include <vector>
 
 #include "cpu_micro/worker_common.h"
+#include "cpu_micro/worker_kernels_common.h"
 
 namespace mm_worker {
 
-using u64 = uint64_t;
+#define DELAY_N   n = delay; while (n > 0) { MN1; --n; }
 
 // variable bandwidth for loaded latency
+void kernel_r1w0_seq(uint64_t& ret, uint64_t*& p, uint32_t delay) {
+    uint32_t n = 0;
+    LP256(RD32 DELAY_N);
+}
+
+void kernel_r1w1_seq(uint64_t& ret, uint64_t*& p, uint32_t delay) {
+    uint32_t n = 0;
+    LP128(RD32 WR32 LP4(DELAY_N));
+}
+
+void kernel_r2w1_seq(uint64_t& ret, uint64_t*& p, uint32_t delay) {
+    uint32_t n = 0;
+    LP64(LP3(RD32) WR32 LP6(DELAY_N));
+}
+
+void kernel_r3w1_seq(uint64_t& ret, uint64_t*& p, uint32_t delay) {
+    uint32_t n = 0;
+    LP42(LP5(RD32) WR32 LP8(DELAY_N));
+    LP3(RD32) LP1(WR32) LP4(DELAY_N);
+}
+
 void get_kernels_with_delays(
-    std::list<std::tuple<uint32_t, kernel_function>>& delays_and_kernels,
+    std::list<std::tuple<uint32_t, func_kernel_bw>>& delays_and_kernels,
     uint32_t read_write_mix
-);
-
-void k_r1w0_s_n0(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n1(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n2(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n4(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n8(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n16(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n32(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n48(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n64(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n80(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n88(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n96(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n104(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n112(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n128(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n160(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n192(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n224(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n256(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n384(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n512(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n768(uint64_t& ret, uint64_t*& p);
-void k_r1w0_s_n1024(uint64_t& ret, uint64_t*& p);
-
-
-void k_r1w1_s_n0(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n1(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n2(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n4(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n8(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n16(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n32(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n48(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n64(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n80(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n88(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n96(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n104(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n112(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n128(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n160(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n192(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n224(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n256(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n384(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n512(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n768(uint64_t& ret, uint64_t*& p);
-void k_r1w1_s_n1024(uint64_t& ret, uint64_t*& p);
-
-
-void k_r2w1_s_n0(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n1(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n2(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n4(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n8(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n16(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n32(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n48(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n64(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n80(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n88(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n96(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n104(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n112(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n128(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n160(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n192(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n224(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n256(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n320(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n384(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n448(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n512(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n640(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n768(uint64_t& ret, uint64_t*& p);
-void k_r2w1_s_n1024(uint64_t& ret, uint64_t*& p);
-
-
-void k_r3w1_s_n0(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n1(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n2(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n4(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n8(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n16(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n32(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n48(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n64(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n80(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n88(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n96(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n104(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n112(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n128(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n160(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n192(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n224(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n256(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n384(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n512(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n768(uint64_t& ret, uint64_t*& p);
-void k_r3w1_s_n1024(uint64_t& ret, uint64_t*& p);
-
+) {
+    std::vector<uint32_t> delays = {
+        1, 8, 32, 48, 64, 80, 88, 96,
+        104, 112, 128, 160, 192,
+        224, 256, 320, 384, 484,
+        512, 640, 768, 1024,
+    };
+    for (auto delay : delays) {
+        if (read_write_mix == 0) {
+            delays_and_kernels.push_back({delay, kernel_r1w0_seq});
+        } else if (read_write_mix == 1) {
+            delays_and_kernels.push_back({delay, kernel_r1w1_seq});
+        } else if (read_write_mix == 2) {
+            delays_and_kernels.push_back({delay, kernel_r2w1_seq});
+        } else if (read_write_mix == 3) {
+            delays_and_kernels.push_back({delay, kernel_r3w1_seq});
+        } else {
+            delays_and_kernels.push_back({delay, kernel_r2w1_seq});
+        }
+    }
+}
 
 }
 

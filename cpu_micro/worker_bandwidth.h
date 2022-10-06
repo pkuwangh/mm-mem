@@ -13,7 +13,7 @@
 namespace mm_worker {
 
 void bw_sequential(
-    kernel_function kernel,
+    func_kernel_bw kernel,
     mm_utils::MemRegion::Handle mem_region,
     uint32_t read_write_mix,
     uint32_t target_duration,
@@ -52,7 +52,7 @@ void bw_sequential(
     while (true) {
         p = start;
         for (i = 0; i < loop_count; ++i) {
-            kernel(ret, p);
+            kernel(ret, p, 0);
             *finished_bytes += loop_bytes;
             if (*finished_bytes > next_chkpt_bytes) {
                 timer_exec.endTimer();

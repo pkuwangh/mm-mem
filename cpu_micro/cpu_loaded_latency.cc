@@ -22,7 +22,7 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     uint32_t last_measured_lat_ps,
     uint32_t last_measured_bw_gbps,
     uint32_t delay,
-    mm_worker::kernel_function& kernel
+    mm_worker::func_kernel_bw& kernel
 ) {
     std::vector<uint64_t> finished_bytes(config.num_threads, 0);
     std::vector<double> exec_time(config.num_threads, 0);
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     }
     // setup workers
     std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    std::list<std::tuple<uint32_t, mm_worker::kernel_function>> delays_and_kernels;
+    std::list<std::tuple<uint32_t, mm_worker::func_kernel_bw>> delays_and_kernels;
     mm_worker::get_kernels_with_delays(delays_and_kernels, config.read_write_mix);
     std::cout << std::setw(12) << "delay";
     std::cout << std::setw(12) << "bandwidth";
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
     delays_and_kernels.push_front(delays_and_kernels.front());
     for (auto& item : delays_and_kernels) {
         uint32_t delay = std::get<0>(item);
-        mm_worker::kernel_function& kernel = std::get<1>(item);
+        mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         std::tie(last_lat_ps, last_bw_gbps) = measure_loaded_latency(
             config, regions, workers, last_lat_ps, last_bw_gbps, delay, kernel);
     }

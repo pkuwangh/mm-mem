@@ -9,13 +9,8 @@ set(TESTS
 )
 
 foreach(TEST ${TESTS})
-  if (${TEST} STREQUAL "cpu_loaded_latency")
-    file(GLOB WORKER_SRCS kernels_delay_bandwidth/worker_kernels_delay_bandwidth_*.cc)
-  else()
-    set(WORKER_SRCS "")
-  endif()
 
-  add_executable(${TEST} ${TEST}.cc ${COMMON_SRCS} ${WORKER_SRCS})
+  add_executable(${TEST} ${TEST}.cc ${COMMON_SRCS})
 
   if (APPLE)
     target_link_libraries(${TEST} LINK_PUBLIC

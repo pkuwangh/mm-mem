@@ -8,15 +8,12 @@ namespace mm_worker {
 
 #define TIMER_THRESHOLD (double)1.005
 
-using kernel_function = std::function<void(uint64_t&, uint64_t*&)>;
-
-// dummy one for invalid configs
-void kernel_dummy(uint64_t& ret, uint64_t*& p);
+using func_kernel_lat = std::function<void(uint64_t&, uint64_t*&)>;
+using func_kernel_bw = std::function<void(uint64_t&, uint64_t*&, uint32_t)>;
+using func_kernel_memcpy = std::function<void*(void*, const void*, std::size_t)>;
 
 // calculate write bandwidth
 float get_write_fraction(uint32_t read_write_mix);
-
-using kernel_func_memcpy = std::function<void*(void*, const void*, std::size_t)>;
 
 }
 

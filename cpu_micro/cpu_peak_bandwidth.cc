@@ -20,7 +20,7 @@ uint32_t measure_peak_bandwidth(
     std::vector<std::shared_ptr<std::thread>>& workers,
     uint32_t read_write_mix,
     uint32_t last_measured_bw_gbps,
-    mm_worker::kernel_function& kernel
+    mm_worker::func_kernel_bw& kernel
 ) {
     std::vector<uint64_t> finished_bytes(config.num_threads, 0);
     std::vector<double> exec_time(config.num_threads, 0);
@@ -76,13 +76,13 @@ int main(int argc, char** argv) {
         );
     }
     std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    std::list<std::tuple<uint32_t, mm_worker::kernel_function>> rwmix_and_kernels;
+    std::list<std::tuple<uint32_t, mm_worker::func_kernel_bw>> rwmix_and_kernels;
     mm_worker::get_kernels_with_wrmix(rwmix_and_kernels, config.read_write_mix);
     uint32_t last_bw_gbps = 0;
     rwmix_and_kernels.push_front(rwmix_and_kernels.front());
     for (auto& item : rwmix_and_kernels) {
         uint32_t read_write_mix = std::get<0>(item);
-        mm_worker::kernel_function& kernel = std::get<1>(item);
+        mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         last_bw_gbps = measure_peak_bandwidth(
             config, regions, workers, read_write_mix, last_bw_gbps, kernel);
     }

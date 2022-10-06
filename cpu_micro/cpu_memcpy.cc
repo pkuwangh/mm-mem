@@ -20,7 +20,7 @@ uint64_t measure_mempcy_bandwidth(
     std::vector<mm_utils::MemRegion::Handle>& dst_regions,
     std::vector<std::shared_ptr<std::thread>>& workers,
     uint64_t last_measured_exec_time_ns,
-    const mm_worker::kernel_func_memcpy& kernel
+    const mm_worker::func_kernel_memcpy& kernel
 ) {
     std::vector<uint64_t> finished_bytes(config.num_threads, 0);
     std::vector<double> exec_time(config.num_threads, 0);
