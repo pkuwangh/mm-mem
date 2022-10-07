@@ -132,22 +132,16 @@ char* MemRegion::allocNumaAware_(const uint64_t& size, char*& raw_addr, uint64_t
 #if __linux__
         raw_addr = (char*)aligned_alloc(numa_pagesize(), raw_size);
         unsigned long num_nodes = numa_max_node() + 1;
-        unsigned long maxnode = num_nodes + 1;  // tihs seems to be a kernel/documentaion bug
         int mbind_ret = 0;
-        if (mem_type_ == MemType::NODE0) {
-            // raw_addr = (char*)numa_alloc_onnode(raw_size, 0);
-            unsigned long nodemask = ((unsigned long)1 << 0);
-            mbind_ret = mbind(raw_addr, raw_size, MPOL_PREFERRED, &nodemask, maxnode, 0);
-        } else if (mem_type_ == MemType::NODE1) {
-            // raw_addr = (char*)numa_alloc_onnode(raw_size, 1);
-            unsigned long nodemask = ((unsigned long)1 << 1);
-            mbind_ret = mbind(raw_addr, raw_size, MPOL_PREFERRED, &nodemask, maxnode, 0);
-        } else if (mem_type_ == MemType::INTERLEAVE) {
+        if (mem_type_ == MemType::INTERLEAVE) {
             // raw_addr = (char*)numa_alloc_interleaved(raw_size);
             unsigned long nodemask = ((unsigned long)1 << (numa_max_node() + 1)) - 1;
-            mbind_ret = mbind(raw_addr, raw_size, MPOL_INTERLEAVE, &nodemask, maxnode, 0);
+            mbind_ret = mbind(raw_addr, raw_size, MPOL_INTERLEAVE, &nodemask, num_nodes, 0);
         } else {
-          error_("unknown mem type");
+            const int node = static_cast<int>(mem_type_) - static_cast<int>(MemType::NODE0);
+            // raw_addr = (char*)numa_alloc_onnode(raw_size, node);
+            unsigned long nodemask = ((unsigned long)1 << node);
+            mbind_ret = mbind(raw_addr, raw_size, MPOL_PREFERRED, &nodemask, num_nodes, 0);
         }
         if (mbind_ret < 0) {
             error_("mbind error");

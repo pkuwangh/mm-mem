@@ -15,7 +15,7 @@
 #include "cpu_micro/worker_kernels_memcpy.h"
 
 uint64_t measure_mempcy_bandwidth(
-    mm_utils::Configuration& config,
+    const mm_utils::Configuration& config,
     std::vector<mm_utils::MemRegion::Handle>& src_regions,
     std::vector<mm_utils::MemRegion::Handle>& dst_regions,
     std::vector<std::shared_ptr<std::thread>>& workers,

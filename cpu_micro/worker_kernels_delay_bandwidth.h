@@ -11,8 +11,9 @@ namespace mm_worker {
 using u64 = uint64_t;
 
 // variable bandwidth for loaded latency
+using delay_kernel_list = std::list<std::tuple<int32_t, kernel_function>>;
 void get_kernels_with_delays(
-    std::list<std::tuple<uint32_t, kernel_function>>& delays_and_kernels,
+    delay_kernel_list& delays_and_kernels,
     uint32_t read_write_mix
 );
 

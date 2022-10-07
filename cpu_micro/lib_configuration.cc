@@ -15,7 +15,7 @@ Configuration::Configuration(Testing_Type testing_type) :
     } else if (testing_type == Testing_Type::BANDWIDTH) {
         test_name = "Peak bandwidth";
     } else if (testing_type == Testing_Type::LATENCY_BANDWIDTH) {
-        test_name = "Loaded latency; 1 latency thread + n-1 bandwidth threads";
+        test_name = "Loaded latency; 1 latency thread + n-1 load generation threads";
     } else if (testing_type == Testing_Type::MEMCPY) {
         test_name = "Memcpy (glibc)";
     } else if (testing_type == Testing_Type::BRANCH_THROUGHPUT) {
@@ -77,7 +77,7 @@ void Configuration::add_latency_options_() {
             po::value(&chunk_size_kb)->default_value(128),
             "chunk size in KB - target L1TLB can cover")
         ("stride_size,s",
-            po::value(&stride_size_b)->default_value(64),
+            po::value(&stride_size_b)->default_value(128),
             "stride size in byte")
         ("use_hugepage,H",
             po::value(&use_hugepage)->default_value(0),
@@ -106,6 +106,14 @@ void Configuration::add_bandwidth_options_() {
              get_str_rw_mix(2) + "\n  3 - " +
              get_str_rw_mix(3) + additional_msg).c_str())
         ;
+    if (testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
+        int32_t default_load_gen_delay = 0;
+        bandwidth_options.add_options()
+            ("load_gen_delay,d",
+                po::value(&load_gen_delay)->default_value(default_load_gen_delay),
+                "delay slots b/w memory requests for load generation threads")
+            ;
+    }
     desc_->add(bandwidth_options);
 }
 
@@ -133,7 +141,7 @@ int Configuration::parse_options(int argc, char** argv) {
     return 0;
 }
 
-std::string Configuration::get_str_access_pattern(uint32_t x_access_pattern) {
+std::string Configuration::get_str_access_pattern(uint32_t x_access_pattern) const {
     if (x_access_pattern == 0) {
         return "sequential";
     } else if (x_access_pattern == 1) {
@@ -145,7 +153,7 @@ std::string Configuration::get_str_access_pattern(uint32_t x_access_pattern) {
     }
 }
 
-std::string Configuration::get_str_huge_page(uint32_t x_huge_page) {
+std::string Configuration::get_str_huge_page(uint32_t x_huge_page) const {
     if (x_huge_page == 0) {
         return "No huge page";
     } else if (x_huge_page == 1) {
@@ -157,7 +165,7 @@ std::string Configuration::get_str_huge_page(uint32_t x_huge_page) {
     }
 }
 
-std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) {
+std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) const {
     if (x_rw_mix == 0) {
         return "all reads";
     } else if (x_rw_mix == 1) {
@@ -173,7 +181,7 @@ std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) {
     }
 }
 
-void Configuration::dump() {
+void Configuration::dump() const {
     std::cout << "threads:           " << num_threads << std::endl;
     if (testing_type_ < Testing_Type::BRANCH_THROUGHPUT) {
         std::cout << "region size in KB: " << region_size_kb << std::endl;

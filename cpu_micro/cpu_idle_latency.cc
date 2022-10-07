@@ -14,7 +14,7 @@
 #include "cpu_micro/worker_kernels_latency.h"
 
 uint32_t measure_idle_latency(
-    mm_utils::Configuration& config,
+    const mm_utils::Configuration& config,
     std::vector<mm_utils::MemRegion::Handle>& regions,
     std::vector<std::shared_ptr<std::thread>>& workers,
     uint32_t last_measured_lat_ps

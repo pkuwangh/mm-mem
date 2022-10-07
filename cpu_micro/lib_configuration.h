@@ -26,11 +26,11 @@ class Configuration {
     ~Configuration() = default;
 
     int parse_options(int argc, char** argv);
-    void dump();
+    void dump() const;
 
-    std::string get_str_access_pattern(uint32_t x_access_pattern);
-    std::string get_str_huge_page(uint32_t x_huge_page);
-    std::string get_str_rw_mix(uint32_t x_rw_mix);
+    std::string get_str_access_pattern(uint32_t x_access_pattern) const;
+    std::string get_str_huge_page(uint32_t x_huge_page) const;
+    std::string get_str_rw_mix(uint32_t x_rw_mix) const;
 
     uint32_t num_total_threads = 0;
     uint32_t num_threads = 1;
@@ -41,6 +41,7 @@ class Configuration {
     uint64_t fragment_size_b = 4096;
     uint32_t use_hugepage = 0;
     uint32_t read_write_mix = 0;
+    int32_t  load_gen_delay = 0;
     uint32_t target_duration_s = 10;
 
   private:

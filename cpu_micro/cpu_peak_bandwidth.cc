@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
-#include <list>
 #include <string>
 #include <thread>
 #include <vector>
@@ -15,7 +14,7 @@
 #include "cpu_micro/worker_kernels_bandwidth.h"
 
 uint32_t measure_peak_bandwidth(
-    mm_utils::Configuration& config,
+    const mm_utils::Configuration& config,
     std::vector<mm_utils::MemRegion::Handle>& regions,
     std::vector<std::shared_ptr<std::thread>>& workers,
     uint32_t read_write_mix,
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
         );
     }
     std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    std::list<std::tuple<uint32_t, mm_worker::kernel_function>> rwmix_and_kernels;
+    mm_worker::rwmix_kernel_list rwmix_and_kernels;
     mm_worker::get_kernels_with_wrmix(rwmix_and_kernels, config.read_write_mix);
     uint32_t last_bw_gbps = 0;
     rwmix_and_kernels.push_front(rwmix_and_kernels.front());

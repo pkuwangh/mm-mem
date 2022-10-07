@@ -1,9 +1,9 @@
 #include <iomanip>
 #include <iostream>
-#include <list>
 #include <string>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <thread>
 #include <vector>
 
@@ -16,7 +16,7 @@
 #include "cpu_micro/worker_latency.h"
 
 std::tuple<uint32_t, uint32_t> measure_loaded_latency(
-    mm_utils::Configuration& config,
+    const mm_utils::Configuration& config,
     std::vector<mm_utils::MemRegion::Handle>& regions,
     std::vector<std::shared_ptr<std::thread>>& workers,
     uint32_t last_measured_lat_ps,
@@ -46,7 +46,7 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
             kernel,
             regions[i],
             config.read_write_mix,
-            config.target_duration_s,
+            (last_measured_bw_gbps > 0)? config.target_duration_s : 1,
             last_measured_bw_gbps,
             config.num_total_threads,
             config.num_threads,
@@ -76,6 +76,29 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     }
     return std::make_tuple(
         static_cast<uint32_t>(latency * 1e3), static_cast<uint32_t>(mem_bw_gbps));
+}
+
+
+void build_delays_and_kernels(
+    mm_worker::delay_kernel_list& delays_and_kernels,
+    const mm_utils::Configuration& config
+) {
+    mm_worker::delay_kernel_list delays_and_kernels_raw;
+    mm_worker::get_kernels_with_delays(delays_and_kernels_raw, config.read_write_mix);
+    if (config.load_gen_delay > 0) {
+        int32_t gap = config.load_gen_delay;
+        for (auto& item : delays_and_kernels_raw) {
+            int32_t curr_gap = abs(std::get<0>(item) - config.load_gen_delay);
+            if (curr_gap < gap) {
+                gap = curr_gap;
+                delays_and_kernels.clear();
+                delays_and_kernels.push_back(item);
+            }
+        }
+    } else {
+        delays_and_kernels = delays_and_kernels_raw;
+    }
+    delays_and_kernels.push_front(delays_and_kernels.front());
 }
 
 
@@ -111,14 +134,13 @@ int main(int argc, char** argv) {
     }
     // setup workers
     std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    std::list<std::tuple<uint32_t, mm_worker::kernel_function>> delays_and_kernels;
-    mm_worker::get_kernels_with_delays(delays_and_kernels, config.read_write_mix);
+    mm_worker::delay_kernel_list delays_and_kernels;
+    build_delays_and_kernels(delays_and_kernels, config);
     std::cout << std::setw(12) << "delay";
     std::cout << std::setw(12) << "bandwidth";
     std::cout << std::setw(12) << "latency" << std::endl;
     uint32_t last_lat_ps = 0;
     uint32_t last_bw_gbps = 0;
-    delays_and_kernels.push_front(delays_and_kernels.front());
     for (auto& item : delays_and_kernels) {
         uint32_t delay = std::get<0>(item);
         mm_worker::kernel_function& kernel = std::get<1>(item);

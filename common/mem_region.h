@@ -11,6 +11,12 @@ enum class MemType : int {
   NATIVE,
   NODE0,
   NODE1,
+  NODE2,
+  NODE3,
+  NODE4,
+  NODE5,
+  NODE6,
+  NODE7,
   INTERLEAVE,
 };
 

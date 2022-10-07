@@ -29,4 +29,3 @@ foreach(TEST ${TESTS})
 
   install(TARGETS ${TEST} DESTINATION "bin")
 endforeach()
-

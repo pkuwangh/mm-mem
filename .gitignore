@@ -1,7 +1,5 @@
 __pycache__/
 fb_*
 
-build/bin/
-build/lib/
-build/release/
-build/debug/
+build/
+bin/

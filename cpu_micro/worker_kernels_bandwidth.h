@@ -33,9 +33,10 @@ void kernel_bw_r3w1_sequential(uint64_t& ret, uint64_t*& p) {
     LP1(WR32)
 }
 
+using rwmix_kernel_list = std::list<std::tuple<uint32_t, kernel_function>>;
 
 void get_kernels_with_wrmix(
-    std::list<std::tuple<uint32_t, kernel_function>>& rwmix_and_kernels,
+    rwmix_kernel_list& rwmix_and_kernels,
     uint32_t read_write_mix
 ) {
     if (read_write_mix == 0) {

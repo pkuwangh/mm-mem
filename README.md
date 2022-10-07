@@ -4,7 +4,6 @@ Memory benchmarking and characterization tools
 ## Build
 ```
   ./scripts/install_deps.py
-  cd build/
   make
 ```
 
@@ -19,15 +18,15 @@ This setup a 512MB region using 4KB pages, randomly pointer-chase through first 
 
 Option 2 - Use huge page and random-in-full-region pattern
 ```
-  ../scripts/setup_hugepage.sh
+  ./scripts/setup_hugepage.sh
   ./bin/cpu_idle_latency --region_size 524288 --access_pattern 2 --use_hugepage 2 --target_duration 10
+  ./scripts/reset_hugepage.sh
 ```
 This setup a 512MB region using 1GB pages, randomly pointer-chase through the whole region for 10 seconds.
 
 ### Peak Bandwidth
 Use nproc number of threads, each streaming through a 128MB region; sweep different read/write ratios
 ```
-  ../scripts/reset_hugepage.sh
   ./bin/cpu_peak_bandwidth --region_size 131072 --target_duration 10
 ```
 
@@ -39,6 +38,7 @@ Use 1 latency thread to do random-in-chunk pointer-chasing; other nproc-1 thread
 
 Again, we can use huge page for latency thread
 ```
-  ../scripts/setup_hugepage.sh
+  ./scripts/setup_hugepage.sh
   ./bin/cpu_loaded_latency --region_size 131072 --access_pattern 2 --use_hugepage 2 --read_write_mix 2 --target_duration 10
+  ./scripts/reset_hugepage.sh
 ```
