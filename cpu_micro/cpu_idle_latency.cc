@@ -11,7 +11,7 @@
 #include "common/timing.h"
 #include "cpu_micro/lib_configuration.h"
 #include "cpu_micro/worker_latency.h"
-#include "cpu_micro/worker_kernels_latency.h"
+#include "cpu_micro/kernels_latency.h"
 
 uint32_t measure_idle_latency(
     const mm_utils::Configuration& config,

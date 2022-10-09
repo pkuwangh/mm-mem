@@ -12,7 +12,7 @@
 namespace mm_worker {
 
 void lat_ptr(
-    kernel_function kernel,
+    func_kernel_lat kernel,
     mm_utils::MemRegion::Handle mem_region,
     uint32_t target_duration,
     uint32_t ref_latency_ps,

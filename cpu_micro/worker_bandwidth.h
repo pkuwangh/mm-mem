@@ -13,7 +13,7 @@
 namespace mm_worker {
 
 void bw_sequential(
-    kernel_function kernel,
+    func_kernel_bw kernel,
     mm_utils::MemRegion::Handle mem_region,
     uint32_t read_write_mix,
     uint32_t target_duration,

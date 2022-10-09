@@ -13,7 +13,7 @@
 namespace mm_worker {
 
 void copy_fragment(
-    kernel_func_memcpy kernel,
+    func_kernel_memcpy kernel,
     mm_utils::MemRegion::Handle src_mem_region,
     mm_utils::MemRegion::Handle dst_mem_region,
     uint64_t fragment_size,

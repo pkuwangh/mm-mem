@@ -6,11 +6,12 @@ set(TESTS
   "cpu_loaded_latency"
   "cpu_memcpy"
   "cpu_branch_throughput"
+  "cpu_numa_info"
 )
 
 foreach(TEST ${TESTS})
   if (${TEST} STREQUAL "cpu_loaded_latency")
-    file(GLOB WORKER_SRCS kernels_delay_bandwidth/worker_kernels_delay_bandwidth_*.cc)
+    file(GLOB WORKER_SRCS kernels_delay_bandwidth/kernels_delay_bandwidth_*.cc)
   else()
     set(WORKER_SRCS "")
   endif()
@@ -19,11 +20,11 @@ foreach(TEST ${TESTS})
 
   if (APPLE)
     target_link_libraries(${TEST} LINK_PUBLIC
-      Timing MemRegion
+      MemRegion MmUtils
       boost_program_options pthread)
   else()
     target_link_libraries(${TEST} LINK_PUBLIC
-      Timing MemRegion
+      MemRegion MmUtils
       boost_program_options numa pthread)
   endif()
 

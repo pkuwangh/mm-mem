@@ -11,8 +11,8 @@
 #include "common/timing.h"
 #include "cpu_micro/lib_configuration.h"
 #include "cpu_micro/worker_bandwidth.h"
-#include "cpu_micro/worker_kernels_delay_bandwidth.h"
-#include "cpu_micro/worker_kernels_latency.h"
+#include "cpu_micro/kernels_delay_bandwidth.h"
+#include "cpu_micro/kernels_latency.h"
 #include "cpu_micro/worker_latency.h"
 
 std::tuple<uint32_t, uint32_t> measure_loaded_latency(
@@ -22,7 +22,7 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     uint32_t last_measured_lat_ps,
     uint32_t last_measured_bw_gbps,
     uint32_t delay,
-    mm_worker::kernel_function& kernel
+    mm_worker::func_kernel_bw& kernel_bw
 ) {
     std::vector<uint64_t> finished_bytes(config.num_threads, 0);
     std::vector<double> exec_time(config.num_threads, 0);
@@ -43,7 +43,7 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     for (uint32_t i = 1; i < config.num_threads; ++i) {
         workers[i] = std::make_shared<std::thread>(
             mm_worker::bw_sequential,
-            kernel,
+            kernel_bw,
             regions[i],
             config.read_write_mix,
             (last_measured_bw_gbps > 0)? config.target_duration_s : 1,
@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
     uint32_t last_bw_gbps = 0;
     for (auto& item : delays_and_kernels) {
         uint32_t delay = std::get<0>(item);
-        mm_worker::kernel_function& kernel = std::get<1>(item);
+        mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         std::tie(last_lat_ps, last_bw_gbps) = measure_loaded_latency(
             config, regions, workers, last_lat_ps, last_bw_gbps, delay, kernel);
     }
