@@ -13,4 +13,4 @@ clean:
 	if [ -d "build/debug" ]; then make -C build/debug clean; fi
 
 clobber:
-	rm -rf build
+	rm -rf build bin

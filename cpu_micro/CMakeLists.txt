@@ -20,11 +20,11 @@ foreach(TEST ${TESTS})
 
   if (APPLE)
     target_link_libraries(${TEST} LINK_PUBLIC
-      MemRegion MmUtils
+      MmMemSys
       boost_program_options pthread)
   else()
     target_link_libraries(${TEST} LINK_PUBLIC
-      MemRegion MmUtils
+      MmMemSys
       boost_program_options numa pthread)
   endif()
 

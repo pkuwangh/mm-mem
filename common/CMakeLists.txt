@@ -1,2 +1,12 @@
-add_library(MmUtils timing.cc kmg_parser.cc numa_config.cc)
-add_library(MemRegion mem_region.cc)
+add_library(MmUtils
+    kmg_parser.cc
+    timing.cc
+)
+
+add_library(MmMemSys
+    mem_region.cc
+    numa_config.cc
+)
+target_link_libraries(MmMemSys
+    MmUtils
+)

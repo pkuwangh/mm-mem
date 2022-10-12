@@ -27,7 +27,7 @@ class NumaConfig {
     uint32_t num_numa_nodes = 0;
     uint32_t num_numa_nodes_configured = 0;
     uint32_t num_numa_nodes_possible = 0;
-    uint32_t num_cpus;
+    uint32_t num_cpus = 0;
     uint32_t num_cpus_possible = 0;
 
     std::map<uint32_t, int64_t> node_to_mem;

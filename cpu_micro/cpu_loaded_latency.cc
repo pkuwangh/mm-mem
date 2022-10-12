@@ -1,69 +1,61 @@
+#include <cstdint>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <cassert>
-#include <cstdint>
-#include <cstdlib>
-#include <thread>
 #include <vector>
 
 #include "common/mem_region.h"
 #include "common/timing.h"
+#include "common/worker_thread_manager.h"
 #include "cpu_micro/lib_configuration.h"
-#include "cpu_micro/worker_bandwidth.h"
 #include "cpu_micro/kernels_delay_bandwidth.h"
 #include "cpu_micro/kernels_latency.h"
+#include "cpu_micro/worker_bandwidth.h"
 #include "cpu_micro/worker_latency.h"
 
 std::tuple<uint32_t, uint32_t> measure_loaded_latency(
-    const mm_utils::Configuration& config,
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    mm_worker::func_kernel_bw& kernel_bw,
     std::vector<mm_utils::MemRegion::Handle>& regions,
-    std::vector<std::shared_ptr<std::thread>>& workers,
+    const mm_utils::Configuration& config,
     uint32_t last_measured_lat_ps,
     uint32_t last_measured_bw_gbps,
-    uint32_t delay,
-    mm_worker::func_kernel_bw& kernel_bw
+    uint32_t delay
 ) {
-    std::vector<uint64_t> finished_bytes(config.num_threads, 0);
-    std::vector<double> exec_time(config.num_threads, 0);
+    // init the packet passed into each worker
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i].reset();
+        worker_manager.getPacket(i).mem_region = regions[i];
+        worker_manager.getPacket(i).kernel_lat = mm_worker::kernel_lat;
+        worker_manager.getPacket(i).ref_latency_ps = last_measured_lat_ps;
+        worker_manager.getPacket(i).kernel_bw = kernel_bw;
+        worker_manager.getPacket(i).read_write_mix = config.read_write_mix;
+        worker_manager.getPacket(i).ref_total_bw_gbps = last_measured_bw_gbps;
+        worker_manager.getPacket(i).num_total_threads = config.num_total_threads;
+        if (i == 0) {
+            worker_manager.getPacket(i).target_duration =
+                (last_measured_lat_ps > 0) ? config.target_duration_s : 1;
+        } else {
+            worker_manager.getPacket(i).target_duration =
+                (last_measured_bw_gbps > 0) ? config.target_duration_s : 1;
+        }
     }
-    // latency thread
-    workers[0] = std::make_shared<std::thread>(
-        mm_worker::lat_ptr,
-        mm_worker::kernel_lat,
-        regions[0],
-        (last_measured_lat_ps > 0) ? config.target_duration_s : 1,
-        last_measured_lat_ps,
-        &finished_bytes[0],
-        &exec_time[0]
-    );
-    // bandwidth thread
-    for (uint32_t i = 1; i < config.num_threads; ++i) {
-        workers[i] = std::make_shared<std::thread>(
-            mm_worker::bw_sequential,
-            kernel_bw,
-            regions[i],
-            config.read_write_mix,
-            (last_measured_bw_gbps > 0)? config.target_duration_s : 1,
-            last_measured_bw_gbps,
-            config.num_total_threads,
-            config.num_threads,
-            &finished_bytes[i],
-            &exec_time[i]
-        );
-    }
+    // set routines
+    worker_manager.setRoutine(
+        mm_worker::lat_ptr, [](const uint32_t& idx) { return idx == 0; });
+    worker_manager.setRoutine(
+        mm_worker::bw_sequential, [](const uint32_t& idx) { return idx > 0; });
+    // start
+    worker_manager.create();
     // done
-    workers[0]->join();
-    uint64_t latency_chases = finished_bytes[0];
+    worker_manager.join();
+    uint64_t latency_chases = worker_manager.getPacket(0).finished_chases;
     uint64_t total_bytes = latency_chases * config.stride_size_b;
-    double latency_exec_time = exec_time[0];
+    double latency_exec_time = worker_manager.getPacket(0).exec_time;
     double total_exec_time = latency_exec_time;
     for (uint32_t i = 1; i < config.num_threads; ++i) {
-        workers[i]->join();
-        total_bytes += finished_bytes[i];
-        total_exec_time += exec_time[i];
+        total_bytes += worker_manager.getPacket(i).finished_bytes;
+        total_exec_time += worker_manager.getPacket(i).exec_time;
     }
     double latency = latency_exec_time * 1e9 / latency_chases;
     double mem_bw = total_bytes / total_exec_time * config.num_threads;
@@ -108,7 +100,17 @@ int main(int argc, char** argv) {
         return 1;
     }
     config.dump();
+    // setup workers
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(
+        config.num_threads,
+        {},
+        false
+    );
+    // get kernels
+    mm_worker::delay_kernel_list delays_and_kernels;
+    build_delays_and_kernels(delays_and_kernels, config);
     // setup memory regions
+    mm_utils::start_timer("setup");
     std::vector<mm_utils::MemRegion::Handle> regions(config.num_threads, nullptr);
     // latency thread
     regions[0] = std::make_shared<mm_utils::MemRegion>(
@@ -132,10 +134,8 @@ int main(int argc, char** argv) {
             config.region_size_kb * 1024, 4096, 64
         );
     }
-    // setup workers
-    std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    mm_worker::delay_kernel_list delays_and_kernels;
-    build_delays_and_kernels(delays_and_kernels, config);
+    mm_utils::end_timer("setup", std::cout);
+    // start the show
     std::cout << std::setw(12) << "delay";
     std::cout << std::setw(12) << "bandwidth";
     std::cout << std::setw(12) << "latency" << std::endl;
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
         uint32_t delay = std::get<0>(item);
         mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         std::tie(last_lat_ps, last_bw_gbps) = measure_loaded_latency(
-            config, regions, workers, last_lat_ps, last_bw_gbps, delay, kernel);
+            worker_manager, kernel, regions, config, last_lat_ps, last_bw_gbps, delay);
     }
     std::cout << std::endl;
     return 0;

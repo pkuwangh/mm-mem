@@ -1,13 +1,13 @@
-#include "common/numa_config.h"
-
 #include <iostream>
 #include <thread>
 
 #include "common/kmg_parser.h"
+#include "common/numa_config.h"
 
 namespace mm_utils {
 
 NumaConfig::NumaConfig() {
+#if __linux__
     num_numa_nodes = numa_max_node() + 1;
     num_numa_nodes_configured = numa_num_configured_nodes();
     num_numa_nodes_possible = numa_num_possible_nodes();
@@ -29,11 +29,14 @@ NumaConfig::NumaConfig() {
             }
         }
     }
+#endif
 }
 
 
 NumaConfig::~NumaConfig() {
+#if __linux__
     numa_free_cpumask(cpumask_);
+#endif
 }
 
 

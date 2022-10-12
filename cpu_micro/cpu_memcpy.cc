@@ -1,52 +1,44 @@
-#include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
-#include <list>
-#include <string>
-#include <thread>
 #include <vector>
-#include <boost/program_options.hpp>
 
 #include "common/mem_region.h"
 #include "common/timing.h"
+#include "common/worker_thread_manager.h"
 #include "cpu_micro/lib_configuration.h"
-#include "cpu_micro/worker_memcpy.h"
 #include "cpu_micro/kernels_memcpy.h"
+#include "cpu_micro/worker_memcpy.h"
 
 uint64_t measure_mempcy_bandwidth(
-    const mm_utils::Configuration& config,
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    const mm_worker::func_kernel_memcpy& kernel,
     std::vector<mm_utils::MemRegion::Handle>& src_regions,
     std::vector<mm_utils::MemRegion::Handle>& dst_regions,
-    std::vector<std::shared_ptr<std::thread>>& workers,
-    uint64_t last_measured_exec_time_ns,
-    const mm_worker::func_kernel_memcpy& kernel
+    const mm_utils::Configuration& config,
+    uint64_t last_measured_exec_time_ns
 ) {
-    std::vector<uint64_t> finished_bytes(config.num_threads, 0);
-    std::vector<double> exec_time(config.num_threads, 0);
+    // init the packet passed into each worker
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i].reset();
+        worker_manager.getPacket(i).mem_region = dst_regions[i];
+        worker_manager.getPacket(i).kernel_memcpy = kernel;
+        worker_manager.getPacket(i).src_mem_region = src_regions[i];
+        worker_manager.getPacket(i).fragment_size = config.fragment_size_b;
+        worker_manager.getPacket(i).ref_one_exec_time_ns = last_measured_exec_time_ns;
+        worker_manager.getPacket(i).target_duration =
+            (last_measured_exec_time_ns > 0) ? config.target_duration_s : 1;
     }
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i] = std::make_shared<std::thread>(
-            mm_worker::copy_fragment,
-            kernel,
-            src_regions[i],
-            dst_regions[i],
-            config.fragment_size_b,
-            (last_measured_exec_time_ns > 0) ? config.target_duration_s : 1,
-            last_measured_exec_time_ns,
-            &finished_bytes[i],
-            &exec_time[i]
-        );
-    }
+    // set routines
+    worker_manager.setRoutine(mm_worker::copy_fragment);
+    // start
+    worker_manager.create();
     // done
+    worker_manager.join();
     uint64_t total_bytes = 0;
     double total_exec_time = 0;
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i]->join();
-        total_bytes += finished_bytes[i];
-        total_exec_time += exec_time[i];
+        total_bytes += worker_manager.getPacket(i).finished_bytes;
+        total_exec_time += worker_manager.getPacket(i).exec_time;
     }
     double copy_bw = total_bytes / total_exec_time * config.num_threads;
     double copy_bw_mbps = copy_bw / 1024 / 1024;
@@ -71,7 +63,13 @@ int main(int argc, char** argv) {
         config.fragment_size_b = config.region_size_kb * 1024;
     }
     config.dump();
-    // setup memory regions & workers
+    // setup workers
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(
+        config.num_threads,
+        {},
+        false
+    );
+    // setup memory regions
     std::vector<mm_utils::MemRegion::Handle> src_regions(config.num_threads, nullptr);
     std::vector<mm_utils::MemRegion::Handle> dst_regions(config.num_threads, nullptr);
     for (uint32_t i = 0; i < config.num_threads; ++i) {
@@ -82,14 +80,14 @@ int main(int argc, char** argv) {
             config.region_size_kb * 1024, 4096, 64
         );
     }
-    std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
+    // start the show
     uint64_t last_exec_time_ns = 0;
     last_exec_time_ns = measure_mempcy_bandwidth(
-        config, src_regions, dst_regions, workers,
-        last_exec_time_ns, std::move(mm_worker::glibc_memcpy));
+        worker_manager, std::move(mm_worker::glibc_memcpy),
+        src_regions, dst_regions, config, last_exec_time_ns);
     measure_mempcy_bandwidth(
-        config, src_regions, dst_regions, workers,
-        last_exec_time_ns, std::move(mm_worker::glibc_memcpy));
+        worker_manager, std::move(mm_worker::glibc_memcpy),
+        src_regions, dst_regions, config, last_exec_time_ns);
     std::cout << std::endl;
     return 0;
 }

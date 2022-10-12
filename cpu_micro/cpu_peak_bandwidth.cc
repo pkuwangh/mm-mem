@@ -1,52 +1,45 @@
-#include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <thread>
 #include <vector>
-#include <boost/program_options.hpp>
 
 #include "common/mem_region.h"
 #include "common/timing.h"
+#include "common/worker_thread_manager.h"
 #include "cpu_micro/lib_configuration.h"
-#include "cpu_micro/worker_bandwidth.h"
 #include "cpu_micro/kernels_bandwidth.h"
+#include "cpu_micro/worker_bandwidth.h"
 
 uint32_t measure_peak_bandwidth(
-    const mm_utils::Configuration& config,
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    mm_worker::func_kernel_bw& kernel,
     std::vector<mm_utils::MemRegion::Handle>& regions,
-    std::vector<std::shared_ptr<std::thread>>& workers,
+    const mm_utils::Configuration& config,
     uint32_t read_write_mix,
-    uint32_t last_measured_bw_gbps,
-    mm_worker::func_kernel_bw& kernel
+    uint32_t last_measured_bw_gbps
 ) {
-    std::vector<uint64_t> finished_bytes(config.num_threads, 0);
-    std::vector<double> exec_time(config.num_threads, 0);
+    // init the packet passed into each worker
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i].reset();
+        worker_manager.getPacket(i).mem_region = regions[i];
+        worker_manager.getPacket(i).kernel_bw = kernel;
+        worker_manager.getPacket(i).read_write_mix = read_write_mix;
+        worker_manager.getPacket(i).ref_total_bw_gbps = last_measured_bw_gbps;
+        worker_manager.getPacket(i).num_total_threads = config.num_total_threads;
+        worker_manager.getPacket(i).target_duration =
+            (last_measured_bw_gbps > 0) ? config.target_duration_s : 1;
     }
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i] = std::make_shared<std::thread>(
-            mm_worker::bw_sequential,
-            kernel,
-            regions[i],
-            read_write_mix,
-            (last_measured_bw_gbps > 0) ? config.target_duration_s : 1,
-            last_measured_bw_gbps,
-            config.num_total_threads,
-            config.num_threads,
-            &finished_bytes[i],
-            &exec_time[i]
-        );
-    }
+    // set routines
+    worker_manager.setRoutine(mm_worker::bw_sequential);
+    // start
+    worker_manager.create();
     // done
+    worker_manager.join();
     uint64_t total_bytes = 0;
     double total_exec_time = 0;
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        workers[i]->join();
-        total_bytes += finished_bytes[i];
-        total_exec_time += exec_time[i];
+        total_bytes += worker_manager.getPacket(i).finished_bytes;
+        total_exec_time += worker_manager.getPacket(i).exec_time;
     }
     double mem_bw = total_bytes / total_exec_time * config.num_threads;
     double mem_bw_mbps = mem_bw / 1024 / 1024;
@@ -67,25 +60,33 @@ int main(int argc, char** argv) {
         return 1;
     }
     config.dump();
-    mm_utils::start_timer("startup");
-    // setup memory regions & workers
+    // setup workers
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(
+        config.num_threads,
+        {},
+        false
+    );
+    // get kernels
+    mm_worker::rwmix_kernel_list rwmix_and_kernels;
+    mm_worker::get_kernels_with_wrmix(rwmix_and_kernels, config.read_write_mix);
+    rwmix_and_kernels.push_front(rwmix_and_kernels.front());
+    // setup memory regions
+    mm_utils::start_timer("setup");
     std::vector<mm_utils::MemRegion::Handle> regions(config.num_threads, nullptr);
     for (uint32_t i = 0; i < config.num_threads; ++i) {
         regions[i] = std::make_shared<mm_utils::MemRegion>(
             config.region_size_kb * 1024, 4096, 64
         );
     }
-    std::vector<std::shared_ptr<std::thread>> workers(config.num_threads, nullptr);
-    mm_worker::rwmix_kernel_list rwmix_and_kernels;
-    mm_worker::get_kernels_with_wrmix(rwmix_and_kernels, config.read_write_mix);
+    mm_utils::end_timer("setup", std::cout);
+    // start the show
     uint32_t last_bw_gbps = 0;
-    rwmix_and_kernels.push_front(rwmix_and_kernels.front());
-    mm_utils::end_timer("startup", std::cout);
     for (auto& item : rwmix_and_kernels) {
         uint32_t read_write_mix = std::get<0>(item);
         mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         last_bw_gbps = measure_peak_bandwidth(
-            config, regions, workers, read_write_mix, last_bw_gbps, kernel);
+            worker_manager, kernel, regions,
+            config, read_write_mix, last_bw_gbps);
     }
     std::cout << std::endl;
     return 0;
