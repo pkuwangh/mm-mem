@@ -3,6 +3,9 @@
 
 #include <cstdint>
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <thread>
 #include <vector>
 #include <pthread.h>
 
@@ -29,10 +32,11 @@ class WorkerThreadManager {
     WorkerThreadManager(
         uint32_t num_threads,
         const std::vector<uint32_t>& cpu_core_id,
-        bool do_binding);
+        bool do_binding,
+        bool verbose);
     ~WorkerThreadManager() = default;
 
-    void dumpThreadMapping() const;
+    std::string getAlignedIndex(uint32_t idx) const;
 
     Packet& getPacket(const uint32_t& idx) { return packets_[idx]; }
     const Packet& getPacket(const uint32_t& idx) const { return packets_[idx]; }
@@ -55,6 +59,7 @@ class WorkerThreadManager {
 
   private:
     const uint32_t num_threads_;
+    const uint32_t num_cpus_ = 0;
     const std::vector<uint32_t> cpu_core_id_;
 
     std::vector<pthread_t> workers_;
@@ -74,56 +79,59 @@ template <class Packet>
 WorkerThreadManager<Packet>::WorkerThreadManager(
         uint32_t num_threads,
         const std::vector<uint32_t>& cpu_core_id,
-        bool do_binding) :
+        bool do_binding,
+        bool verbose) :
     num_threads_ (num_threads),
+    num_cpus_ (std::thread::hardware_concurrency()),
     cpu_core_id_ (cpu_core_id),
     workers_ (num_threads),
     attrs_ (num_threads),
     start_routines_ (num_threads, nullptr),
     packets_ (num_threads)
 {
-    if (do_binding && cpu_core_id_.size() != num_threads_) {
-        std::cerr << "CPU Core ID list not match thread count; "
-                  << " so will NOT do binding" << std::endl;
+    if (do_binding && cpu_core_id_.size() == 0) {
+        std::cerr << "CPU Core ID list empty; "
+                  << "so will NOT do binding" << std::endl;
         do_binding = false;
+    }
+    if (do_binding && verbose) {
+        std::cout << "thread ID: [ ";
+        for (uint32_t i = 0; i < num_threads_; ++i) {
+            std::cout << getAlignedIndex(i);
+        }
+        std::cout << "]\n core  ID: [ ";
     }
     for (uint32_t i = 0; i < num_threads_; ++i) {
         // prepare thread attrs
         pthread_attr_init(&attrs_[i]);
         if (do_binding) {
+            uint32_t idx = (num_threads_ == 1) ? (cpu_core_id_.size() / 4) : i;
+            uint32_t j = cpu_core_id[idx % cpu_core_id_.size()];
             cpu_set_t cpuset;
             CPU_ZERO(&cpuset);
-            CPU_SET(cpu_core_id_[i], &cpuset);
+            CPU_SET(j, &cpuset);
             // set thread attribute
             pthread_attr_setaffinity_np(&attrs_[i], sizeof(cpu_set_t), &cpuset);
+            if (verbose) {
+                std::cout << getAlignedIndex(j);
+            }
         }
         // thread packet basics
         packets_[i].setThreadId(num_threads_, i);
     }
-
+    if (do_binding && verbose) {
+        std::cout << "]" << std::endl;
+    }
 }
 
 template <class Packet>
-void WorkerThreadManager<Packet>::dumpThreadMapping() const {
-    if (cpu_core_id_.size() == num_threads_) {
-        std::cout << "thread ID: [";
-        for (uint32_t i = 0; i < num_threads_; ++i) {
-            std::cout << i;
-            if (num_threads_ > 100 && i < 100) std::cout << " ";
-            if (i < 10) std::cout << " ";
-            if (i < num_threads_ - 1) std::cout << " ";
-        }
-        std::cout << "]\n core  ID: [";
-        for (uint32_t i = 0; i < num_threads_; ++i) {
-            std::cout << cpu_core_id_[i];
-            if (num_threads_ > 100 && i < 100) std::cout << " ";
-            if (i < 10) std::cout << " ";
-            if (i < num_threads_ - 1) std::cout << " ";
-        }
-        std::cout << "]" << std::endl;
-    } else {
-        std::cout << "No valid thread-core mapping" << std::endl;
-    }
+std::string WorkerThreadManager<Packet>::getAlignedIndex(uint32_t idx) const {
+    std::stringstream ss;
+    ss << idx;
+    if (idx < 100 && (num_threads_ > 100 || num_cpus_ > 100)) ss << " ";
+    if (idx < 10) ss << " ";
+    ss << " ";
+    return ss.str();
 }
 
 template <class Packet>

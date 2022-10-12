@@ -1,5 +1,4 @@
 #include <iostream>
-#include <thread>
 
 #include "cpu_micro/lib_configuration.h"
 
@@ -8,7 +7,6 @@ namespace mm_utils {
 Configuration::Configuration(Testing_Type testing_type) :
     testing_type_ (testing_type)
 {
-    num_total_threads = std::thread::hardware_concurrency();
     std::string test_name;
     if (testing_type == Testing_Type::LATENCY) {
         test_name = "Idle latency";
@@ -36,7 +34,7 @@ Configuration::Configuration(Testing_Type testing_type) :
 }
 
 void Configuration::add_generic_options_() {
-    uint32_t default_num_threads = num_total_threads;
+    uint32_t default_num_threads = numa_config.all_allowed_cpus.size();
     uint64_t default_region_size_kb = 128 * 1024;
     if (testing_type_ == Testing_Type::LATENCY) {
         default_num_threads = 1;
@@ -61,10 +59,22 @@ void Configuration::add_generic_options_() {
                 "region size in KB")
             ;
     }
+    generic_options.add_options()
+        ("no_binding",
+            po::bool_switch(&no_binding),
+            "NOT to do thread-to-core binding")
+        ("verbose,v",
+            po::bool_switch(&verbose),
+            "enable verbose output")
+        ;
     desc_->add(generic_options);
 }
 
 void Configuration::add_latency_options_() {
+    uint32_t default_chunk_size_kb = 128;
+    if (testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
+        default_chunk_size_kb = 64;
+    }
     po::options_description latency_options("Latency thread options");
     latency_options.add_options()
         ("access_pattern,p",
@@ -74,7 +84,7 @@ void Configuration::add_latency_options_() {
              get_str_access_pattern(1) + "\n  2 - " +
              get_str_access_pattern(2)).c_str())
         ("chunk_size,c",
-            po::value(&chunk_size_kb)->default_value(128),
+            po::value(&chunk_size_kb)->default_value(default_chunk_size_kb),
             "chunk size in KB - target L1TLB can cover")
         ("stride_size,s",
             po::value(&stride_size_b)->default_value(128),

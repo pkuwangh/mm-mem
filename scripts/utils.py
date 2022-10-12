@@ -11,7 +11,7 @@ def exec_cmd(
     for_real: bool,
     print_cmd: bool = True,
 ) -> None:
-    cmd_str = ' '.join(cmd)
+    cmd_str = " ".join(cmd)
     if print_cmd:
         print(cmd_str)
     if for_real:
@@ -38,7 +38,7 @@ def run_proc(
 ) -> Optional[str]:
     env_setting = [f"{k}={v}" for k,v in env.items()]
     if print_cmd:
-        print(' '.join(env_setting + cmd))
+        print(" ".join(env_setting + cmd))
     exec_env = os.environ.copy()
     if for_real:
         for k, v in env.items():
@@ -57,8 +57,8 @@ def run_proc(
 
 def run_proc_simple(
     cmd: List[str],
-    for_real: bool,
-    print_cmd: bool = True,
+    for_real: bool = True,
+    print_cmd: bool = False,
 ) -> Optional[str]:
     return run_proc(cmd, ".", {}, None, for_real, print_cmd)
 

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "common/mem_region.h"
+#include "common/numa_config.h"
 #include "common/timing.h"
 #include "common/worker_thread_manager.h"
 #include "cpu_micro/lib_configuration.h"
@@ -31,7 +32,7 @@ uint32_t measure_peak_bandwidth(
         worker_manager.getPacket(i).kernel_bw = kernel;
         worker_manager.getPacket(i).read_write_mix = read_write_mix;
         worker_manager.getPacket(i).ref_total_bw_gbps = last_measured_bw_gbps;
-        worker_manager.getPacket(i).num_total_threads = config.num_total_threads;
+        worker_manager.getPacket(i).num_total_threads = config.numa_config.num_cpus;
         worker_manager.getPacket(i).target_duration =
             (last_measured_bw_gbps > 0) ? config.target_duration_s : 1;
     }
@@ -69,8 +70,9 @@ int main(int argc, char** argv) {
     // setup workers
     mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(
         config.num_threads,
-        {},
-        false
+        config.numa_config.all_allowed_cpus,
+        !config.no_binding,
+        config.verbose
     );
     // get kernels
     mm_worker::rwmix_kernel_list rwmix_and_kernels;

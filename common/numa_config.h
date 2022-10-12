@@ -30,6 +30,8 @@ class NumaConfig {
     uint32_t num_cpus = 0;
     uint32_t num_cpus_possible = 0;
 
+    std::vector<uint32_t> all_cpus;
+    std::vector<uint32_t> all_allowed_cpus;
     std::map<uint32_t, int64_t> node_to_mem;
     std::map<uint32_t, std::vector<uint32_t>> node_to_cpus;
 

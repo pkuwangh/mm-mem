@@ -17,8 +17,9 @@ int main(int argc, char** argv) {
     // setup workers
     mm_utils::WorkerThreadManager<mm_worker::BrPredThreadPacket> worker_manager(
         config.num_threads,
-        {},
-        false
+        config.numa_config.all_allowed_cpus,
+        !config.no_binding,
+        config.verbose
     );
     // start the show
     // init the packet passed into each worker

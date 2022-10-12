@@ -43,7 +43,7 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
         worker_manager.getPacket(i).kernel_bw = kernel_bw;
         worker_manager.getPacket(i).read_write_mix = config.read_write_mix;
         worker_manager.getPacket(i).ref_total_bw_gbps = last_measured_bw_gbps;
-        worker_manager.getPacket(i).num_total_threads = config.num_total_threads;
+        worker_manager.getPacket(i).num_total_threads = config.numa_config.num_cpus;
         if (i == 0) {
             worker_manager.getPacket(i).target_duration =
                 (last_measured_lat_ps > 0) ? config.target_duration_s : 1;
@@ -115,8 +115,9 @@ int main(int argc, char** argv) {
     // setup workers
     mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(
         config.num_threads,
-        {},
-        false
+        config.numa_config.all_allowed_cpus,
+        !config.no_binding,
+        config.verbose
     );
     // get kernels
     mm_worker::delay_kernel_list delays_and_kernels;
