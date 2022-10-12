@@ -10,6 +10,15 @@
 
 namespace mm_worker {
 
+void* mem_region_alloc_bw(void* ptr) {
+    MemLatBwThreadPacket* pkt = static_cast<MemLatBwThreadPacket*>(ptr);
+    pkt->mem_region = std::make_shared<mm_utils::MemRegion>(
+        pkt->region_size_kb * 1024, 4096, 64
+    );
+    return nullptr;
+}
+
+
 void* bw_sequential(void* ptr) {
     MemLatBwThreadPacket* pkt = static_cast<MemLatBwThreadPacket*>(ptr);
     // setup checkpoint

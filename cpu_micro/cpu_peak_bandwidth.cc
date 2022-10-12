@@ -11,17 +11,23 @@
 #include "cpu_micro/kernels_bandwidth.h"
 #include "cpu_micro/worker_bandwidth.h"
 
+void setup_memory_regions_peak_bandwidth(
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    const mm_utils::Configuration& config
+) {
+    mm_worker::prepare_mem_lat_bw_thread_packet(worker_manager, config);
+    worker_manager.setRoutineAndRun(mm_worker::mem_region_alloc_bw);
+}
+
 uint32_t measure_peak_bandwidth(
     mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
     mm_worker::func_kernel_bw& kernel,
-    std::vector<mm_utils::MemRegion::Handle>& regions,
     const mm_utils::Configuration& config,
     uint32_t read_write_mix,
     uint32_t last_measured_bw_gbps
 ) {
     // init the packet passed into each worker
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        worker_manager.getPacket(i).mem_region = regions[i];
         worker_manager.getPacket(i).kernel_bw = kernel;
         worker_manager.getPacket(i).read_write_mix = read_write_mix;
         worker_manager.getPacket(i).ref_total_bw_gbps = last_measured_bw_gbps;
@@ -72,12 +78,7 @@ int main(int argc, char** argv) {
     rwmix_and_kernels.push_front(rwmix_and_kernels.front());
     // setup memory regions
     mm_utils::start_timer("setup");
-    std::vector<mm_utils::MemRegion::Handle> regions(config.num_threads, nullptr);
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
-        regions[i] = std::make_shared<mm_utils::MemRegion>(
-            config.region_size_kb * 1024, 4096, 64
-        );
-    }
+    setup_memory_regions_peak_bandwidth(worker_manager, config);
     mm_utils::end_timer("setup", std::cout);
     // start the show
     uint32_t last_bw_gbps = 0;
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
         uint32_t read_write_mix = std::get<0>(item);
         mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         last_bw_gbps = measure_peak_bandwidth(
-            worker_manager, kernel, regions,
+            worker_manager, kernel,
             config, read_write_mix, last_bw_gbps);
     }
     std::cout << std::endl;

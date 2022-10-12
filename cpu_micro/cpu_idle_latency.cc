@@ -11,15 +11,21 @@
 #include "cpu_micro/kernels_latency.h"
 #include "cpu_micro/worker_latency.h"
 
+void setup_memory_regions_idle_latency(
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    const mm_utils::Configuration& config
+) {
+    mm_worker::prepare_mem_lat_bw_thread_packet(worker_manager, config);
+    worker_manager.setRoutineAndRun(mm_worker::mem_region_alloc_lat);
+}
+
 uint32_t measure_idle_latency(
     mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
-    std::vector<mm_utils::MemRegion::Handle>& regions,
     const mm_utils::Configuration& config,
     uint32_t last_measured_lat_ps
 ) {
     // init the packet passed into each worker
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        worker_manager.getPacket(i).mem_region = regions[i];
         worker_manager.getPacket(i).kernel_lat = mm_worker::kernel_lat;
         worker_manager.getPacket(i).ref_latency_ps = last_measured_lat_ps;
         worker_manager.getPacket(i).target_duration =
@@ -59,30 +65,11 @@ int main(int argc, char** argv) {
         false
     );
     // setup memory regions
-    std::vector<mm_utils::MemRegion::Handle> regions(config.num_threads, nullptr);
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
-        regions[i] = std::make_shared<mm_utils::MemRegion>(
-            config.region_size_kb * 1024,
-            config.chunk_size_kb * 1024,
-            config.stride_size_b,
-            static_cast<mm_utils::HugePageType>(config.use_hugepage)
-        );
-        if (config.access_pattern == 0) {
-            regions[i]->stride_init();
-        } else if (config.access_pattern == 1) {
-            regions[i]->page_random_init();
-        } else if (config.access_pattern == 2) {
-            regions[i]->all_random_init();
-        } else {
-            std::cerr << "invalid access pattern" << std::endl;
-            return 1;
-        }
-        // regions[i]->dump();
-    }
+    setup_memory_regions_idle_latency(worker_manager, config);
     // start the show
     uint32_t last_lat_ps = 0;
-    last_lat_ps = measure_idle_latency(worker_manager, regions, config, last_lat_ps);
-    measure_idle_latency(worker_manager, regions, config, last_lat_ps);
+    last_lat_ps = measure_idle_latency(worker_manager, config, last_lat_ps);
+    measure_idle_latency(worker_manager, config, last_lat_ps);
     std::cout << std::endl;
     return 0;
 }

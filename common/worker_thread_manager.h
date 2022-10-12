@@ -44,6 +44,15 @@ class WorkerThreadManager {
     void create();
     void join();
 
+    void run() {
+        create();
+        join();
+    }
+    void setRoutineAndRun(void *(*start_routine)(void *)) {
+        setRoutine(start_routine);
+        run();
+    }
+
   private:
     const uint32_t num_threads_;
     const std::vector<uint32_t> cpu_core_id_;

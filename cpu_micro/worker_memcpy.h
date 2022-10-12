@@ -1,5 +1,5 @@
-#ifndef __WORKER_LATENCY_H__
-#define __WORKER_LATENCY_H__
+#ifndef __WORKER_MEMCPY_H__
+#define __WORKER_MEMCPY_H__
 
 #include <algorithm>
 #include <iostream>
@@ -10,6 +10,18 @@
 #include "cpu_micro/worker_thread_packet.h"
 
 namespace mm_worker {
+
+void* mem_region_alloc_memcpy(void* ptr) {
+    MemLatBwThreadPacket* pkt = static_cast<MemLatBwThreadPacket*>(ptr);
+    pkt->mem_region = std::make_shared<mm_utils::MemRegion>(
+        pkt->region_size_kb * 1024, 4096, 64
+    );
+    pkt->src_mem_region = std::make_shared<mm_utils::MemRegion>(
+        pkt->region_size_kb * 1024, 4096, 64
+    );
+    return nullptr;
+}
+
 
 void* copy_fragment(void* ptr) {
     MemLatBwThreadPacket* pkt = static_cast<MemLatBwThreadPacket*>(ptr);

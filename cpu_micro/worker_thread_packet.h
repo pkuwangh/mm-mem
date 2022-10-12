@@ -3,6 +3,7 @@
 
 #include "common/mem_region.h"
 #include "common/worker_thread_manager.h"
+#include "cpu_micro/lib_configuration.h"
 #include "cpu_micro/worker_common.h"
 
 namespace mm_worker {
@@ -19,6 +20,11 @@ class CpuMicroThreadPacket : public mm_utils::BaseThreadPacket {
 class MemLatBwThreadPacket : public CpuMicroThreadPacket {
   public:
     mm_utils::MemRegion::Handle mem_region = nullptr;
+    uint64_t region_size_kb = 0;
+    uint32_t access_pattern = 0;
+    uint32_t chunk_size_kb = 0;
+    uint32_t stride_size_b = 0;
+    uint32_t use_hugepage = 0;
     // latency thread
     func_kernel_lat kernel_lat;
     uint32_t ref_latency_ps = 0;
@@ -35,6 +41,15 @@ class MemLatBwThreadPacket : public CpuMicroThreadPacket {
     // output
     uint64_t finished_chases = 0;
     uint64_t finished_bytes = 0;
+
+  public:
+    void copy_mem_region_config(const mm_utils::Configuration& config) {
+        region_size_kb = config.region_size_kb;
+        access_pattern = config.access_pattern;
+        chunk_size_kb = config.chunk_size_kb;
+        stride_size_b = config.stride_size_b;
+        use_hugepage = config.use_hugepage;
+    }
 };
 
 
@@ -43,6 +58,16 @@ class BrPredThreadPacket : public CpuMicroThreadPacket {
     // output
     uint64_t finished_branches = 0;
 };
+
+
+void prepare_mem_lat_bw_thread_packet(
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    const mm_utils::Configuration& config
+) {
+    for (uint32_t i = 0; i < config.num_threads; ++i) {
+        worker_manager.getPacket(i).copy_mem_region_config(config);
+    }
+}
 
 }
 

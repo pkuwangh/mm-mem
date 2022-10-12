@@ -14,10 +14,23 @@
 #include "cpu_micro/worker_bandwidth.h"
 #include "cpu_micro/worker_latency.h"
 
+void setup_memory_regions_loaded_latency(
+    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    const mm_utils::Configuration& config
+) {
+    mm_worker::prepare_mem_lat_bw_thread_packet(worker_manager, config);
+    worker_manager.setRoutine(
+        mm_worker::mem_region_alloc_lat,
+        [](const uint32_t& idx) { return idx == 0; });
+    worker_manager.setRoutine(
+        mm_worker::mem_region_alloc_bw,
+        [](const uint32_t& idx) { return idx > 0; });
+    worker_manager.run();
+}
+
 std::tuple<uint32_t, uint32_t> measure_loaded_latency(
     mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
     mm_worker::func_kernel_bw& kernel_bw,
-    std::vector<mm_utils::MemRegion::Handle>& regions,
     const mm_utils::Configuration& config,
     uint32_t last_measured_lat_ps,
     uint32_t last_measured_bw_gbps,
@@ -25,7 +38,6 @@ std::tuple<uint32_t, uint32_t> measure_loaded_latency(
 ) {
     // init the packet passed into each worker
     for (uint32_t i = 0; i < config.num_threads; ++i) {
-        worker_manager.getPacket(i).mem_region = regions[i];
         worker_manager.getPacket(i).kernel_lat = mm_worker::kernel_lat;
         worker_manager.getPacket(i).ref_latency_ps = last_measured_lat_ps;
         worker_manager.getPacket(i).kernel_bw = kernel_bw;
@@ -111,29 +123,7 @@ int main(int argc, char** argv) {
     build_delays_and_kernels(delays_and_kernels, config);
     // setup memory regions
     mm_utils::start_timer("setup");
-    std::vector<mm_utils::MemRegion::Handle> regions(config.num_threads, nullptr);
-    // latency thread
-    regions[0] = std::make_shared<mm_utils::MemRegion>(
-        config.region_size_kb * 1024,
-        config.chunk_size_kb * 4096,
-        config.stride_size_b,
-        static_cast<mm_utils::HugePageType>(config.use_hugepage)
-    );
-    if (config.access_pattern == 0) {
-        regions[0]->stride_init();
-    } else if (config.access_pattern == 1) {
-        regions[0]->page_random_init();
-    } else if (config.access_pattern == 2) {
-        regions[0]->all_random_init();
-    } else {
-        return 1;
-    }
-    // bandwidth thread
-    for (uint32_t i = 1; i < config.num_threads; ++i) {
-        regions[i] = std::make_shared<mm_utils::MemRegion>(
-            config.region_size_kb * 1024, 4096, 64
-        );
-    }
+    setup_memory_regions_loaded_latency(worker_manager, config);
     mm_utils::end_timer("setup", std::cout);
     // start the show
     std::cout << std::setw(12) << "delay";
@@ -145,7 +135,7 @@ int main(int argc, char** argv) {
         uint32_t delay = std::get<0>(item);
         mm_worker::func_kernel_bw& kernel = std::get<1>(item);
         std::tie(last_lat_ps, last_bw_gbps) = measure_loaded_latency(
-            worker_manager, kernel, regions, config, last_lat_ps, last_bw_gbps, delay);
+            worker_manager, kernel, config, last_lat_ps, last_bw_gbps, delay);
     }
     std::cout << std::endl;
     return 0;

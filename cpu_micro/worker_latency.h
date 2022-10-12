@@ -10,6 +10,27 @@
 
 namespace mm_worker {
 
+void* mem_region_alloc_lat(void* ptr) {
+    MemLatBwThreadPacket* pkt = static_cast<MemLatBwThreadPacket*>(ptr);
+    pkt->mem_region = std::make_shared<mm_utils::MemRegion>(
+        pkt->region_size_kb * 1024,
+        pkt->chunk_size_kb * 1024,
+        pkt->stride_size_b,
+        static_cast<mm_utils::HugePageType>(pkt->use_hugepage)
+    );
+    if (pkt->access_pattern == 0) {
+        pkt->mem_region->stride_init();
+    } else if (pkt->access_pattern == 1) {
+        pkt->mem_region->page_random_init();
+    } else if (pkt->access_pattern == 2) {
+        pkt->mem_region->all_random_init();
+    } else {
+        pkt->mem_region->page_random_init();
+    }
+    return nullptr;
+}
+
+
 void* lat_ptr(void* ptr) {
     MemLatBwThreadPacket* pkt = static_cast<MemLatBwThreadPacket*>(ptr);
     // setup checkpoint
