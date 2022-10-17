@@ -35,6 +35,12 @@ class WorkerThreadManager {
         bool do_binding,
         bool verbose);
 
+    virtual ~WorkerThreadManager() {
+        for (uint32_t i = 0; i < num_threads_; ++i) {
+            pthread_attr_destroy(&attrs_[i]);
+        }
+    }
+
     std::string getAlignedIndex(uint32_t idx) const;
 
     uint32_t getNumThreads() const { return num_threads_; }

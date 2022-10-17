@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import json
 import os
 import subprocess
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 
 def exec_cmd(
@@ -36,7 +35,7 @@ def run_proc(
     for_real: bool,
     print_cmd: bool = True,
 ) -> Optional[str]:
-    env_setting = [f"{k}={v}" for k,v in env.items()]
+    env_setting = [f"{k}={v}" for k, v in env.items()]
     if print_cmd:
         print(" ".join(env_setting + cmd))
     exec_env = os.environ.copy()
@@ -66,6 +65,6 @@ def run_proc_simple(
 def read_env() -> Dict[str, str]:
     # default env values
     env_vars = {}
-    env_vars["ROOT"] = '/'.join(os.path.abspath(__file__).split('/')[:-2])
+    env_vars["ROOT"] = "/".join(os.path.abspath(__file__).split("/")[:-2])
     env_vars["HOME"] = os.getenv("HOME")
     return env_vars

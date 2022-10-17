@@ -3,8 +3,9 @@
 import argparse
 import os
 from typing import List
-from utils import run_proc_simple, read_env
+
 from print_host_info import color_str, print_cpu_info, print_mem_info
+from utils import run_proc_simple
 
 
 hugepage_size_kb = 1048576
@@ -12,8 +13,10 @@ hugepage_size_kb = 1048576
 
 
 def get_huge_page_sysfs(nid: int) -> str:
-    return (f"/sys/devices/system/node/node{nid}/" +
-            f"hugepages/hugepages-{hugepage_size_kb}kB/nr_hugepages")
+    return (
+        f"/sys/devices/system/node/node{nid}/"
+        + f"hugepages/hugepages-{hugepage_size_kb}kB/nr_hugepages"
+    )
 
 
 def check_huge_pages(num_numa_nodes: int, post_fix: str = "") -> List[int]:
@@ -73,13 +76,17 @@ def main(args):
 
 def init_parser():
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--check", "-c", action="store_true",
-        help="check current hugepage setup")
-    parser.add_argument("--setup", "-s", action="store_true",
-        help="reserve 2x 1GB huge pages per node")
-    parser.add_argument("--reset", "-r", action="store_true",
-        help="un-reserve all 1GB huge pages")
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--check", "-c", action="store_true", help="check current hugepage setup"
+    )
+    parser.add_argument(
+        "--setup", "-s", action="store_true", help="reserve 2x 1GB huge pages per node"
+    )
+    parser.add_argument(
+        "--reset", "-r", action="store_true", help="un-reserve all 1GB huge pages"
+    )
     return parser
 
 

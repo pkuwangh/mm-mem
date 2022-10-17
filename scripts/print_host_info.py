@@ -2,6 +2,7 @@
 
 from utils import run_proc_simple
 
+
 def color_str(input_str: str, color_code: int) -> str:
     return f"\033[0;{color_code}m{input_str}\033[0m"
 
@@ -57,8 +58,8 @@ def print_gpu_info(num_numa_nodes: int):
     for line in stdout.splitlines():
         if "NVIDIA" in line:
             nvidia_gpus.append(line)
-    print(color_str(f"Total NVidia GPUs: {len(nvidia_gpus)}", 32));
-    per_node_gpus = {x : [] for x in range(num_numa_nodes)}
+    print(color_str(f"Total NVidia GPUs: {len(nvidia_gpus)}", 32))
+    per_node_gpus = {x: [] for x in range(num_numa_nodes)}
     cmd = ["lspci", "-vv"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     index = 0
@@ -76,7 +77,7 @@ def print_gpu_info(num_numa_nodes: int):
                 per_node_gpus[0].append(curr_device)
                 curr_device = ""
     for k, v in per_node_gpus.items():
-        if (len(v) > 0):
+        if len(v) > 0:
             print(f"Node-{k:<5d}{v[0]}")
         for x in v[1:]:
             print(" " * 10 + x)
@@ -92,8 +93,8 @@ def print_nic_info(num_numa_nodes: int):
     for line in stdout.splitlines():
         if "Ethernet" in line:
             nics.append(line)
-    print(color_str(f"Total NICs: {len(nics)}", 32));
-    per_node_nics = {x : [] for x in range(num_numa_nodes)}
+    print(color_str(f"Total NICs: {len(nics)}", 32))
+    per_node_nics = {x: [] for x in range(num_numa_nodes)}
     cmd = ["lspci", "-vv"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     index = 0
@@ -111,7 +112,7 @@ def print_nic_info(num_numa_nodes: int):
                 per_node_nics[0].append(curr_device)
                 curr_device = ""
     for k, v in per_node_nics.items():
-        if (len(v) > 0):
+        if len(v) > 0:
             print(f"Node-{k:<5d}{v[0]}")
         for x in v[1:]:
             print(" " * 10 + x)

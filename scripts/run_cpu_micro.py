@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import os
-from typing import List
-from utils import run_proc_simple, read_env
+
+from config_huge_page import check_huge_pages, reset_huge_pages, setup_huge_pages
 from print_host_info import color_str, print_cpu_info, print_mem_info
-from config_huge_page import check_huge_pages, setup_huge_pages, reset_huge_pages
+from utils import read_env
 
 
 def reserve_huge_page(num_numa_nodes: int) -> bool:
@@ -27,7 +27,14 @@ def run_idle_latency(num_numa_nodes: int, num_huge_pages_orig: int):
     print(color_str("---- Running Idle Latency test ...", 32))
     all_good = reserve_huge_page(num_numa_nodes)
     if all_good:
-        cmd = [get_bin_path("cpu_idle_latency"), "--latency_matrix", "-p", "2", "-H", "2"]
+        cmd = [
+            get_bin_path("cpu_idle_latency"),
+            "--latency_matrix",
+            "-p",
+            "2",
+            "-H",
+            "2",
+        ]
     else:
         cmd = [get_bin_path("cpu_idle_latency"), "--latency_matrix"]
     os.system(" ".join(cmd))
@@ -62,7 +69,9 @@ def run_loaded_latency(num_numa_nodes: int, num_huge_pages_orig: int):
     if all_good:
         cmd = [get_bin_path("cpu_loaded_latency"), "-p", "2", "-H", "2"]
     else:
-        cmd = [get_bin_path("cpu_loaded_latency"),]
+        cmd = [
+            get_bin_path("cpu_loaded_latency"),
+        ]
     os.system(" ".join(cmd))
     reset_huge_pages(num_huge_pages_orig)
 

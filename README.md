@@ -137,4 +137,3 @@ Again, if huge page is not available, we can use random-in-chunk pattern
 ```
 ./bin/cpu_loaded_latency --region_size 131072 --chunk_size 128 --access_pattern 1 --read_write_mix 2 --target_duration 10
 ```
-
