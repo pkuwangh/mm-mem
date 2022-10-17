@@ -38,6 +38,13 @@ def run_peak_bandwidth(num_numa_nodes: int):
     print(color_str("---- Running Peak Bandwidth test ...", 32))
     cmd = [get_bin_path("cpu_peak_bandwidth")]
     os.system(" ".join(cmd))
+    if num_numa_nodes > 0:
+        print(color_str("---- Running Bandwidth Matrix test - All Reads ...", 32))
+        cmd = [get_bin_path("cpu_peak_bandwidth"), "bandwidth_matrix"]
+        os.system(" ".join(cmd))
+        print(color_str("---- Running Bandwidth Matrix test - 1:1 Read/Write ...", 32))
+        cmd = [get_bin_path("cpu_peak_bandwidth"), "bandwidth_matrix", "-m", "1"]
+        os.system(" ".join(cmd))
 
 
 def run_memcpy(num_numa_nodes: int):

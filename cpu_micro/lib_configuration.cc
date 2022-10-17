@@ -76,13 +76,6 @@ void Configuration::add_latency_options_() {
         default_chunk_size_kb = 64;
     }
     po::options_description latency_options("Latency thread options");
-    if (testing_type_ == Testing_Type::LATENCY) {
-        latency_options.add_options()
-            ("latency_matrix",
-                po::bool_switch(&latency_matrix),
-                "Measure local and cross-socket latencies")
-            ;
-    }
     latency_options.add_options()
         ("access_pattern,p",
             po::value(&access_pattern)->default_value(1),
@@ -103,6 +96,13 @@ void Configuration::add_latency_options_() {
              get_str_huge_page(1) + "\n  2 - " +
              get_str_huge_page(2)).c_str())
         ;
+    if (testing_type_ == Testing_Type::LATENCY) {
+        latency_options.add_options()
+            ("latency_matrix",
+                po::bool_switch(&latency_matrix),
+                "Measure local and cross-socket latencies")
+            ;
+    }
     desc_->add(latency_options);
 }
 
@@ -110,8 +110,10 @@ void Configuration::add_bandwidth_options_() {
     uint32_t default_read_write_mix = 2;
     std::string additional_msg = "";
     if (testing_type_ == Testing_Type::BANDWIDTH) {
-        default_read_write_mix = 100;
-        additional_msg = "\n 100 - " + get_str_rw_mix(100);
+        default_read_write_mix = read_write_mix_sweep;
+        additional_msg = (
+            "\n" + std::to_string(read_write_mix_sweep) +
+            " - " + get_str_rw_mix(read_write_mix_sweep));
     }
     po::options_description bandwidth_options("Bandwidth threads options");
     bandwidth_options.add_options()
@@ -131,6 +133,13 @@ void Configuration::add_bandwidth_options_() {
                 "delay slots b/w memory requests for load generation threads")
             ;
     }
+    if (testing_type_ == Testing_Type::BANDWIDTH) {
+        bandwidth_options.add_options()
+            ("bandwidth_matrix",
+                po::bool_switch(&bandwidth_matrix),
+                "Measure local and cross-socket bandwidth")
+            ;
+    }
     desc_->add(bandwidth_options);
 }
 
@@ -143,6 +152,9 @@ void Configuration::add_memcpy_options_() {
             ("fragment size in byte of each memcpy invocation"
              "\n  0 - same as region size"
              "\n  e.g. 4096 - copy each 4KB fragment one by one"))
+        ("memcpy_matrix",
+            po::bool_switch(&memcpy_matrix),
+            "Measure local and cross-socket memcpy bandwidth")
         ;
     desc_->add(memcpy_options);
 }
@@ -195,7 +207,7 @@ std::string Configuration::get_str_rw_mix(uint32_t x_rw_mix) const {
         return "2:1 read/write";
     } else if (x_rw_mix == 3) {
         return "3:1 read/write";
-    } else if (x_rw_mix == 100) {
+    } else if (x_rw_mix == read_write_mix_sweep) {
         return "sweep read/write ratio";
     } else {
         return "invalid";

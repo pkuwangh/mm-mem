@@ -78,7 +78,7 @@ void prepare_mem_lat_bw_thread_packet(
 ) {
     // default mem_type is mm_utils::MemType::NATIVE
     int mem_type = static_cast<int>(mm_utils::MemType::NODE0) + node;
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
+    for (uint32_t i = 0; i < worker_manager.getNumThreads(); ++i) {
         worker_manager.getPacket(i).copy_mem_region_config(config);
         worker_manager.getPacket(i).mem_type = mem_type;
     }

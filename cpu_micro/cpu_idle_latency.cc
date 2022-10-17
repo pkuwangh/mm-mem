@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
@@ -26,7 +27,7 @@ uint32_t measure_idle_latency(
     uint32_t last_measured_lat_ps
 ) {
     // init the packet passed into each worker
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
+    for (uint32_t i = 0; i < worker_manager.getNumThreads(); ++i) {
         worker_manager.getPacket(i).kernel_lat = mm_worker::kernel_lat;
         worker_manager.getPacket(i).ref_latency_ps = last_measured_lat_ps;
         worker_manager.getPacket(i).target_duration =
@@ -40,7 +41,7 @@ uint32_t measure_idle_latency(
     worker_manager.join();
     uint64_t total_chases = 0;
     double total_exec_time = 0;
-    for (uint32_t i = 0; i < config.num_threads; ++i) {
+    for (uint32_t i = 0; i < worker_manager.getNumThreads(); ++i) {
         total_chases += worker_manager.getPacket(i).finished_chases;
         total_exec_time += worker_manager.getPacket(i).exec_time;
     }
@@ -63,8 +64,7 @@ void run(
 void setup_and_run(const mm_utils::Configuration& config) {
     std::shared_ptr<mm_worker::MemLatBwManager> worker_manager;
     if (config.latency_matrix) {
-        // setup workers
-        std::cout << std::left << std::setw(20) << "Idle Latency";
+        std::cout << std::left << std::setw(25) << "Idle Latency (ns)";
         for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
             std::cout << std::setw(10) << "Node-" + std::to_string(j);
         }
@@ -72,14 +72,16 @@ void setup_and_run(const mm_utils::Configuration& config) {
             if (config.numa_config.node_to_cpus.at(i).size() == 0) {
                 continue;
             }
-            std::cout << std::endl << std::setw(20) << "Node-" + std::to_string(i);
+            std::cout << std::endl << std::setw(25) << "Node-" + std::to_string(i);
+            std::cout << std::flush;
             for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
                 if (config.numa_config.node_to_mem.at(j) < ((int64_t)1 << 30)) {
                     continue;
                 }
                 worker_manager.reset();
+                uint32_t node_cpu_count = config.numa_config.node_to_cpus.at(i).size();
                 worker_manager = std::make_shared<mm_worker::MemLatBwManager>(
-                    config.num_threads,
+                    std::min(config.num_threads, node_cpu_count),
                     config.numa_config.node_to_cpus.at(i),
                     true,   // always enable binding
                     config.verbose

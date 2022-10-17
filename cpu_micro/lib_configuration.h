@@ -38,7 +38,6 @@ class Configuration {
 
     uint32_t num_threads = 1;
     uint64_t region_size_kb = 128 * 1024;
-    bool     latency_matrix = false;
     bool     no_binding = false;
     bool     verbose = false;
     uint32_t access_pattern = 1;
@@ -49,6 +48,11 @@ class Configuration {
     uint32_t read_write_mix = 0;
     int32_t  load_gen_delay = 0;
     uint32_t target_duration_s = 10;
+    bool     latency_matrix = false;
+    bool     bandwidth_matrix = false;
+    bool     memcpy_matrix = false;
+
+    const uint32_t read_write_mix_sweep = 100;
 
   private:
     Testing_Type testing_type_;

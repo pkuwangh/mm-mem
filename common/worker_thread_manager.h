@@ -37,6 +37,8 @@ class WorkerThreadManager {
 
     std::string getAlignedIndex(uint32_t idx) const;
 
+    uint32_t getNumThreads() const { return num_threads_; }
+
     Packet& getPacket(const uint32_t& idx) { return packets_[idx]; }
     const Packet& getPacket(const uint32_t& idx) const { return packets_[idx]; }
 
