@@ -41,20 +41,15 @@ MemRegion::MemRegion(
     num_lines_in_page_ = page_size_ / line_size_;
 
     os_page_size_ = getpagesize();
-    // std::cout << "OS page size: " << os_page_size_ << std::endl;
+    // std::cout << "OS page size: " << getpagesize() << std::endl;
 
     // allocate & init region
     if (size_ > 0) {
-        if (mem_type_ == MemType::NATIVE) {
-            addr1_ = allocNative_(size_, raw_addr1_, raw_size1_);
-        } else if (mem_type_ >= MemType::NODE0 && mem_type_ <= MemType::INTERLEAVE) {
-            addr1_ = allocNumaAware_(size_, raw_addr1_, raw_size1_);
-        }
-        // std::cout << "Region-1 addr=0x" << std::hex << reinterpret_cast<uint64_t>(addr1_)
-        //     << " raw_addr=0x" << reinterpret_cast<uint64_t>(raw_addr1_)
+        addr1_ = allocNative_(size_);
+        // std::cout << "Region-1"
+        //     << " addr=0x" << std::hex << reinterpret_cast<uint64_t>(addr1_)
         //     << " end_addr=0x" << reinterpret_cast<uint64_t>(addr1_ + size_)
-        //     << " size=" << std::dec << size_
-        //     << " raw_size=" << std::dec << raw_size1_ << std::endl;
+        //     << " size=" << std::dec << size_ << std::endl;
         memset(addr1_, 0, size_);
     }
     // use a fixed seed
@@ -63,20 +58,13 @@ MemRegion::MemRegion(
 
 MemRegion::~MemRegion() {
     if (addr1_) {
-        if (mem_type_ == MemType::NATIVE) {
-            if (hugepage_type_ > HugePageType::NONE) {
-                munmap(addr1_, size_);
-            } else {
-                free(raw_addr1_);
-            }
-        } else if (mem_type_ >= MemType::NODE0 &&
-                   mem_type_ == MemType::INTERLEAVE) {
-            // numa_free(raw_addr1_, raw_size1_);
-            free(raw_addr1_);
+        if (hugepage_type_ > HugePageType::NONE) {
+            munmap(addr1_, real_size_);
+        } else {
+            free(addr1_);
         }
     }
     addr1_ = nullptr;
-    raw_addr1_ = nullptr;
 }
 
 void MemRegion::error_(std::string message) {
@@ -84,20 +72,46 @@ void MemRegion::error_(std::string message) {
     exit(1);
 }
 
-char* MemRegion::allocNative_(const uint64_t& size, char*& raw_addr, uint64_t& raw_size) {
-    char* addr = NULL;
-    if (hugepage_type_ > HugePageType::NONE) {
+char* MemRegion::allocNative_(const uint64_t& size) {
+    char* addr = nullptr;
+    // set mem policy for numa aware allocation
+    if (mem_type_ >= MemType::NODE0 && mem_type_ <= MemType::INTERLEAVE) {
 #if __linux__
-        int hugepage_size = 0;
-        if (hugepage_type_ == HugePageType::HGPG_2MB) {
-            hugepage_size = 21;
-        } else if (hugepage_type_ == HugePageType::HGPG_1GB) {
-            hugepage_size = 30;
+        int mode = MPOL_DEFAULT;
+        unsigned long nodemask = 0;
+        unsigned long maxnode = (numa_max_node() + 1) + 1;  // additional +1 ?
+        if (mem_type_ == MemType::INTERLEAVE) {
+            mode = MPOL_INTERLEAVE;
+            nodemask = ((unsigned long)1 << (numa_max_node() + 1)) - 1;
+        } else {
+            mode = MPOL_BIND;
+            int node = static_cast<int>(mem_type_) - static_cast<int>(MemType::NODE0);
+            nodemask = ((unsigned long)1 << node);
         }
+        long ret = set_mempolicy(mode, &nodemask, maxnode);
+        if (ret < 0) {
+            error_("set_mempolicy error");
+        }
+#else
+        // TODO
+#endif
+    }
+    // hugepage or regular page
+    if (hugepage_type_ > HugePageType::NONE) {
+        int hugepage_size_log2 = 0;
+        if (hugepage_type_ == HugePageType::HGPG_2MB) {
+            hugepage_size_log2 = 21;
+        } else if (hugepage_type_ == HugePageType::HGPG_1GB) {
+            hugepage_size_log2 = 30;
+        }
+        uint64_t padding = (size % ((uint64_t)1 << hugepage_size_log2) > 0) ? 1 : 0;
+        real_size_ = ((size >> hugepage_size_log2) + padding) << hugepage_size_log2;
+#if __linux__
         addr = ((char*)mmap(
             0x0, size,
             PROT_READ | PROT_WRITE,
-            MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | (hugepage_size << MAP_HUGE_SHIFT),
+            (MAP_PRIVATE | MAP_ANONYMOUS |
+             MAP_HUGETLB | (hugepage_size_log2 << MAP_HUGE_SHIFT)),
             0, 0
         ));
 #else
@@ -108,50 +122,16 @@ char* MemRegion::allocNative_(const uint64_t& size, char*& raw_addr, uint64_t& r
             0, 0
         ));
 #endif
-        // std::cout << "native hugepage" << std::endl;
         if ((int64_t)addr == (int64_t)-1) {
             error_("mmap failed for hugepage");
         }
-        raw_addr = addr;
-        raw_size = size;
     } else {
-        raw_size = size + os_page_size_;
-        raw_addr = (char*)malloc(raw_size);
-        addr = raw_addr + os_page_size_ - (uint64_t)raw_addr % os_page_size_;
-        // std::cout << "native malloc" << std::endl;
-    }
-    return addr;
-}
-
-char* MemRegion::allocNumaAware_(const uint64_t& size, char*& raw_addr, uint64_t& raw_size) {
-    char* addr = NULL;
-    if (hugepage_type_ > HugePageType::NONE) {
-        error_("not yet support hugepage to be numa-aware");
-    } else {
-        raw_size = size + os_page_size_;
+        real_size_ = size;
 #if __linux__
-        raw_addr = (char*)aligned_alloc(numa_pagesize(), raw_size);
-        unsigned long num_nodes = numa_max_node() + 1;
-        int mbind_ret = 0;
-        if (mem_type_ == MemType::INTERLEAVE) {
-            // raw_addr = (char*)numa_alloc_interleaved(raw_size);
-            unsigned long nodemask = ((unsigned long)1 << (numa_max_node() + 1)) - 1;
-            mbind_ret = mbind(raw_addr, raw_size, MPOL_INTERLEAVE, &nodemask, num_nodes, 0);
-        } else {
-            const int node = static_cast<int>(mem_type_) - static_cast<int>(MemType::NODE0);
-            // raw_addr = (char*)numa_alloc_onnode(raw_size, node);
-            unsigned long nodemask = ((unsigned long)1 << node);
-            mbind_ret = mbind(raw_addr, raw_size, MPOL_PREFERRED, &nodemask, num_nodes, 0);
-        }
-        if (mbind_ret < 0) {
-            error_("mbind error");
-        }
+        addr = (char*)aligned_alloc(numa_pagesize(), size);
 #else
-        raw_addr = (char*)aligned_alloc(os_page_size_, raw_size);
-        // TODO
+        addr = (char*)aligned_alloc(os_page_size_, size);
 #endif
-        addr = raw_addr + os_page_size_ - (uint64_t)raw_addr % os_page_size_;
-        // std::cout << "numa_malloc" << std::endl;
     }
     return addr;
 }

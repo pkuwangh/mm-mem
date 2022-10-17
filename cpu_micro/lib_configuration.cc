@@ -76,6 +76,13 @@ void Configuration::add_latency_options_() {
         default_chunk_size_kb = 64;
     }
     po::options_description latency_options("Latency thread options");
+    if (testing_type_ == Testing_Type::LATENCY) {
+        latency_options.add_options()
+            ("latency_matrix",
+                po::bool_switch(&latency_matrix),
+                "Measure local and cross-socket latencies")
+            ;
+    }
     latency_options.add_options()
         ("access_pattern,p",
             po::value(&access_pattern)->default_value(1),
@@ -148,6 +155,10 @@ int Configuration::parse_options(int argc, char** argv) {
         std::cerr << *desc_ << std::endl;
         return 1;
     }
+    // auto corrections
+    if (use_hugepage > 0) {
+        chunk_size_kb = region_size_kb;
+    }
     return 0;
 }
 
@@ -209,7 +220,12 @@ void Configuration::dump() const {
         std::cout << get_str_rw_mix(read_write_mix) << std::endl;
     }
     if (testing_type_ == Testing_Type::MEMCPY) {
-        std::cout << "fragment size in B: " << fragment_size_b << std::endl;
+        if (fragment_size_b % 1024 == 0) {
+            std::cout << "copy size in KB:   " << fragment_size_b / 1024;
+        } else {
+            std::cout << "copy size in B:    " << fragment_size_b;
+        }
+        std::cout << std::endl;
     }
     std::cout << "target duration:   " << target_duration_s << std::endl;
 }

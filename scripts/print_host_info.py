@@ -7,7 +7,7 @@ def color_str(input_str: str, color_code: int) -> str:
 
 
 # cpu
-def print_cpu_info() -> int:
+def print_cpu_info(do_print=True) -> int:
     for_real = True
     print_cmd = False
     num_numa_nodes = 1
@@ -16,11 +16,13 @@ def print_cpu_info() -> int:
     for line in stdout.splitlines():
         if line.startswith("CPU(s)"):
             items = line.split()
-            print(color_str(f"Total CPUs:\t\t{items[1]}", 32))
+            if do_print:
+                print(color_str(f"Total CPUs:\t\t{items[1]}", 32))
         elif line.startswith("NUMA node(s)"):
             num_numa_nodes = int(line.split()[-1])
         elif line.startswith("NUMA") and "CPU" in line:
-            print(line)
+            if do_print:
+                print(line)
     return num_numa_nodes
 
 

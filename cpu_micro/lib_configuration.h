@@ -34,10 +34,11 @@ class Configuration {
     std::string get_str_huge_page(uint32_t x_huge_page) const;
     std::string get_str_rw_mix(uint32_t x_rw_mix) const;
 
-    mm_utils::NumaConfig numa_config;
+    const mm_utils::NumaConfig numa_config;
 
     uint32_t num_threads = 1;
     uint64_t region_size_kb = 128 * 1024;
+    bool     latency_matrix = false;
     bool     no_binding = false;
     bool     verbose = false;
     uint32_t access_pattern = 1;

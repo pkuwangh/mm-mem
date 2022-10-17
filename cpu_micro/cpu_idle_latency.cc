@@ -12,15 +12,16 @@
 #include "cpu_micro/worker_latency.h"
 
 void setup_memory_regions_idle_latency(
-    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
-    const mm_utils::Configuration& config
+    mm_worker::MemLatBwManager& worker_manager,
+    const mm_utils::Configuration& config,
+    int node = -1
 ) {
-    mm_worker::prepare_mem_lat_bw_thread_packet(worker_manager, config);
+    mm_worker::prepare_mem_lat_bw_thread_packet(worker_manager, config, node);
     worker_manager.setRoutineAndRun(mm_worker::mem_region_alloc_lat);
 }
 
 uint32_t measure_idle_latency(
-    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket>& worker_manager,
+    mm_worker::MemLatBwManager& worker_manager,
     const mm_utils::Configuration& config,
     uint32_t last_measured_lat_ps
 ) {
@@ -45,12 +46,66 @@ uint32_t measure_idle_latency(
     }
     double latency = total_exec_time * 1e9 / total_chases;
     if (last_measured_lat_ps > 0) {
-        std::cout << "Idle Latency: " << std::setprecision(4) << latency << " ns";
-        std::cout << std::endl;
+        std::cout << std::setw(10) << std::setprecision(4) << latency << std::flush;
     }
     return static_cast<uint32_t>(latency * 1e3);
 }
 
+void run(
+    mm_worker::MemLatBwManager& worker_manager,
+    const mm_utils::Configuration& config
+) {
+    uint32_t last_lat_ps = 0;
+    last_lat_ps = measure_idle_latency(worker_manager, config, last_lat_ps);
+    measure_idle_latency(worker_manager, config, last_lat_ps);
+}
+
+void setup_and_run(const mm_utils::Configuration& config) {
+    std::shared_ptr<mm_worker::MemLatBwManager> worker_manager;
+    if (config.latency_matrix) {
+        // setup workers
+        std::cout << std::left << std::setw(20) << "Idle Latency";
+        for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
+            std::cout << std::setw(10) << "Node-" + std::to_string(j);
+        }
+        for (uint32_t i = 0; i < config.numa_config.num_numa_nodes; ++i) {
+            if (config.numa_config.node_to_cpus.at(i).size() == 0) {
+                continue;
+            }
+            std::cout << std::endl << std::setw(20) << "Node-" + std::to_string(i);
+            for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
+                if (config.numa_config.node_to_mem.at(j) < ((int64_t)1 << 30)) {
+                    continue;
+                }
+                worker_manager.reset();
+                worker_manager = std::make_shared<mm_worker::MemLatBwManager>(
+                    config.num_threads,
+                    config.numa_config.node_to_cpus.at(i),
+                    true,   // always enable binding
+                    config.verbose
+                );
+                setup_memory_regions_idle_latency(*worker_manager, config, j);
+                run(*worker_manager, config);
+            }
+        }
+        std::cout << std::endl;
+    } else {
+        // setup workers
+        worker_manager = std::make_shared<mm_worker::MemLatBwManager>(
+            config.num_threads,
+            config.numa_config.all_allowed_cpus,
+            !config.no_binding,
+            config.verbose
+        );
+        // setup memory regions
+        setup_memory_regions_idle_latency(*worker_manager, config);
+        // start the show
+        std::cout << "Idle Latency: ";
+        run(*worker_manager, config);
+        std::cout << " ns" << std::endl;
+    }
+    std::cout << std::endl;
+}
 
 int main(int argc, char** argv) {
     mm_utils::Configuration config(mm_utils::Testing_Type::LATENCY);
@@ -58,19 +113,6 @@ int main(int argc, char** argv) {
         return 1;
     }
     config.dump();
-    // setup workers
-    mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(
-        config.num_threads,
-        config.numa_config.all_allowed_cpus,
-        !config.no_binding,
-        config.verbose
-    );
-    // setup memory regions
-    setup_memory_regions_idle_latency(worker_manager, config);
-    // start the show
-    uint32_t last_lat_ps = 0;
-    last_lat_ps = measure_idle_latency(worker_manager, config, last_lat_ps);
-    measure_idle_latency(worker_manager, config, last_lat_ps);
-    std::cout << std::endl;
+    setup_and_run(config);
     return 0;
 }

@@ -34,7 +34,6 @@ class WorkerThreadManager {
         const std::vector<uint32_t>& cpu_core_id,
         bool do_binding,
         bool verbose);
-    ~WorkerThreadManager() = default;
 
     std::string getAlignedIndex(uint32_t idx) const;
 
@@ -95,7 +94,7 @@ WorkerThreadManager<Packet>::WorkerThreadManager(
         do_binding = false;
     }
     if (do_binding && verbose) {
-        std::cout << "thread ID: [ ";
+        std::cout << "\nthread ID: [ ";
         for (uint32_t i = 0; i < num_threads_; ++i) {
             std::cout << getAlignedIndex(i);
         }

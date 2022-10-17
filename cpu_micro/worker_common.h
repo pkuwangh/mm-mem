@@ -6,7 +6,7 @@
 
 namespace mm_worker {
 
-#define TIMER_THRESHOLD (double)1.005
+#define TIMER_THRESHOLD (double)1.01
 
 using func_kernel_lat = std::function<void(uint64_t&, uint64_t*&)>;
 using func_kernel_bw = std::function<void(uint64_t&, uint64_t*&)>;

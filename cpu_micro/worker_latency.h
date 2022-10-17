@@ -16,6 +16,7 @@ void* mem_region_alloc_lat(void* ptr) {
         pkt->region_size_kb * 1024,
         pkt->chunk_size_kb * 1024,
         pkt->stride_size_b,
+        static_cast<mm_utils::MemType>(pkt->mem_type),
         static_cast<mm_utils::HugePageType>(pkt->use_hugepage)
     );
     if (pkt->access_pattern == 0) {

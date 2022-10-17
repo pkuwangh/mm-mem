@@ -8,7 +8,7 @@
 namespace mm_utils {
 
 enum class MemType : int {
-  NATIVE,
+  NATIVE = 0,
   NODE0,
   NODE1,
   NODE2,
@@ -22,7 +22,7 @@ enum class MemType : int {
 
 
 enum class HugePageType : int {
-  NONE,
+  NONE = 0,
   HGPG_2MB,
   HGPG_1GB,
 };
@@ -71,6 +71,15 @@ class MemRegion {
       MemRegion(size, size, page_size, line_size, MemType::NATIVE, hugepage_type)
     { }
 
+    MemRegion(
+      uint64_t size,
+      uint64_t page_size,
+      uint64_t line_size,
+      MemType mem_type,
+      HugePageType hugepage_type) :
+      MemRegion(size, size, page_size, line_size, mem_type, hugepage_type)
+    { }
+
     virtual ~MemRegion();
 
     // initialize to different patterns
@@ -89,8 +98,7 @@ class MemRegion {
 
   private:
     void error_(std::string message);
-    char* allocNative_(const uint64_t& size, char*& raw_addr, uint64_t& raw_size);
-    char* allocNumaAware_(const uint64_t& size, char*& raw_addr, uint64_t& raw_size);
+    char* allocNative_(const uint64_t& size);
     void randomizeSequence_(
         std::vector<uint64_t>& sequence,
         uint64_t size,
@@ -107,8 +115,7 @@ class MemRegion {
     HugePageType hugepage_type_ = HugePageType::NONE;
 
     char*    addr1_ = nullptr;
-    char*    raw_addr1_ = nullptr;
-    uint64_t raw_size1_ = 0;
+    uint64_t real_size_ = 0;
 
     uint64_t num_all_pages_;
     uint64_t num_active_pages_;
