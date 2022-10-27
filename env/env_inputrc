@@ -1,4 +1,6 @@
 # .inputrc
+set bell-style none
+
 set blink-matching-paren on
 set colored-completion-prefix on
 set enable-bracketed-paste on
@@ -10,3 +12,5 @@ set editing-mode vi
 "\e[A": history-search-backward
 "\e[B": history-search-forward
 
+# delete word
+"\C-w": backward-delete-word

@@ -3,6 +3,7 @@
 import os
 
 from config_huge_page import check_huge_pages, reset_huge_pages, setup_huge_pages
+from config_sysfs_settings import check_autonuma, setup_autonuma
 from print_host_info import color_str, print_cpu_info, print_mem_info
 from utils import read_env
 
@@ -47,10 +48,10 @@ def run_peak_bandwidth(num_numa_nodes: int):
     os.system(" ".join(cmd))
     if num_numa_nodes > 0:
         print(color_str("---- Running Bandwidth Matrix test - All Reads ...", 32))
-        cmd = [get_bin_path("cpu_peak_bandwidth"), "bandwidth_matrix"]
+        cmd = [get_bin_path("cpu_peak_bandwidth"), "--bandwidth_matrix"]
         os.system(" ".join(cmd))
         print(color_str("---- Running Bandwidth Matrix test - 1:1 Read/Write ...", 32))
-        cmd = [get_bin_path("cpu_peak_bandwidth"), "bandwidth_matrix", "-m", "1"]
+        cmd = [get_bin_path("cpu_peak_bandwidth"), "--bandwidth_matrix", "-m", "1"]
         os.system(" ".join(cmd))
 
 
@@ -80,8 +81,13 @@ if __name__ == "__main__":
     num_numa_nodes = print_cpu_info()
     print_mem_info(num_numa_nodes)
     num_huge_pages_orig = check_huge_pages(num_numa_nodes, color_str("before", 33))
+    autonuma_setting_orig = check_autonuma(color_str("before", 33))
+    if autonuma_setting_orig > 0:
+        setup_autonuma(value=0)
     print(color_str("-------- Running MM-Mem --------", 35))
     run_idle_latency(num_numa_nodes, num_huge_pages_orig)
     run_peak_bandwidth(num_numa_nodes)
     run_memcpy(num_numa_nodes)
     run_loaded_latency(num_numa_nodes, num_huge_pages_orig)
+    if autonuma_setting_orig > 0:
+        setup_autonuma(value=autonuma_setting_orig)

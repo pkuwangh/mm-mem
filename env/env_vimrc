@@ -17,6 +17,11 @@ set smarttab
 
 set cino=g2,h2,N-s
 
+set number
+set history=100
+
+set nobackup
+
 set ignorecase
 set smartcase
 
@@ -30,18 +35,18 @@ filetype on
 filetype plugin on
 filetype indent on
 
-set number
+set visualbell
+set t_vb=
 
-map <C-K> :pyf /usr/local/share/clang/clang-format.py<CR>
-imap <C-K> <ESC>:pyf /usr/local/share/clang/clang-format.py<CR>i
+autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
+
 
 fun! ShowFuncName()
-  let lnum = line(".")
-  let col = col(".")
-  echohl ModeMsg
-  echo getline(search("^[^ \t#/]\\{2}.*[^:]\s*$", 'bW'))
-  echohl None
-  call search("\\%" . lnum . "l" . "\\%" . col . "c")
+    let lnum = line(".")
+    let col = col(".")
+    echohl ModeMsg
+    echo getline(search("^[^ \t#/]\\{2}.*[^:]\s*$", 'bW'))
+    echohl None
+    call search("\\%" . lnum . "l" . "\\%" . col . "c")
 endfun
 map f :call ShowFuncName() <CR>
-

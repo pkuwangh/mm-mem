@@ -21,38 +21,14 @@ def main(args):
             cmd = ["ssh", remote_name, "mkdir", "-p", target_path]
             exec_cmd(cmd, for_real=True, print_cmd=True)
         # copy the repo myself
+        exclude_list = [".*swp", "__pycache__", "build", "bin", ".git"]
+        exclude_clause = []
+        for item in exclude_list:
+            exclude_clause += ["--exclude", item]
         if args.download:
-            cmd = [
-                "rsync",
-                "-rlcv",
-                "--exclude",
-                ".*swp",
-                "--exclude",
-                "__pycache__",
-                "--exclude",
-                "build",
-                "--exclude",
-                "bin",
-                f"{remote_path}/",
-                proj_path,
-            ]
+            cmd = ["rsync", "-rlcv"] + exclude_clause + [f"{remote_path}/", proj_path]
         else:
-            cmd = [
-                "rsync",
-                "-rlcv",
-                "--exclude",
-                ".*swp",
-                "--exclude",
-                "__pycache__",
-                "--exclude",
-                "build",
-                "--exclude",
-                "bin",
-                "--exclude",
-                ".git",
-                f"{proj_path}/",
-                remote_path,
-            ]
+            cmd = ["rsync", "-rlcv"] + exclude_clause + [f"{proj_path}/", remote_path]
         exec_cmd(cmd, for_real=True, print_cmd=True)
 
 
