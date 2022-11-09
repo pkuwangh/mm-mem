@@ -50,7 +50,7 @@ def setup_huge_pages(num_numa_nodes: int) -> bool:
     all_good = True
     num_huge_pages = check_huge_pages(num_numa_nodes, color_str("after", 33))
     for nid in range(len(num_huge_pages)):
-        if num_huge_pages[nid] != target_num:
+        if num_huge_pages[nid] < target_num:
             print(color_str(f"Fail to reserve huge pages on Node-{nid}", 31))
             all_good = False
     return all_good

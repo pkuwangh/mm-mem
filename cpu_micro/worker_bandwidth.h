@@ -80,7 +80,7 @@ void* bw_sequential(void* ptr) {
            << " bandwidth num_chkpts=" << num_chkpts
            << " finished_bytes=" << pkt->finished_bytes
            << " ret=" << ret << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
     }
     return nullptr;
 }

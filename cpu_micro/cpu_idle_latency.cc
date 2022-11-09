@@ -64,7 +64,9 @@ void run(
 void setup_and_run(const mm_utils::Configuration& config) {
     std::shared_ptr<mm_worker::MemLatBwManager> worker_manager;
     if (config.latency_matrix) {
-        std::cout << std::left << std::setw(25) << "Idle Latency (ns)";
+        std::cout << std::left << std::setw(40)
+            << ("Idle Latency (ns) - " +
+                config.get_str_access_pattern_short(config.access_pattern));
         for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
             std::cout << std::setw(10) << "Node-" + std::to_string(j);
         }
@@ -72,7 +74,7 @@ void setup_and_run(const mm_utils::Configuration& config) {
             if (config.numa_config.node_to_cpus.at(i).size() == 0) {
                 continue;
             }
-            std::cout << std::endl << std::setw(25) << "Node-" + std::to_string(i);
+            std::cout << std::endl << std::setw(40) << "Node-" + std::to_string(i);
             std::cout << std::flush;
             for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
                 if (config.numa_config.node_to_mem.at(j) < ((int64_t)1 << 30)) {
@@ -102,7 +104,8 @@ void setup_and_run(const mm_utils::Configuration& config) {
         // setup memory regions
         setup_memory_regions_idle_latency(*worker_manager, config);
         // start the show
-        std::cout << "Idle Latency: ";
+        std::cout << "Idle Latency - "
+            << config.get_str_access_pattern_short(config.access_pattern) << " : ";
         run(*worker_manager, config);
         std::cout << " ns" << std::endl;
     }

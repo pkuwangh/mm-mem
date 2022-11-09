@@ -186,6 +186,18 @@ std::string Configuration::get_str_access_pattern(uint32_t x_access_pattern) con
     }
 }
 
+std::string Configuration::get_str_access_pattern_short(uint32_t x_access_pattern) const {
+    if (x_access_pattern == 0) {
+        return "Sequential";
+    } else if (x_access_pattern == 1) {
+        return "RandomInChunk";
+    } else if (x_access_pattern == 2) {
+        return "FullRandom";
+    } else {
+        return "invalid";
+    }
+}
+
 std::string Configuration::get_str_huge_page(uint32_t x_huge_page) const {
     if (x_huge_page == 0) {
         return "No huge page";

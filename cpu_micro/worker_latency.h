@@ -92,7 +92,7 @@ void* lat_ptr(void* ptr) {
            << " latency num_chkpts=" << num_chkpts
            << " finished_chases=" << pkt->finished_chases
            << " ret=" << ret << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
     }
     return nullptr;
 }

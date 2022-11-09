@@ -129,7 +129,8 @@ int main(int argc, char** argv) {
     // start the show
     std::cout << std::setw(12) << "delay";
     std::cout << std::setw(12) << "bandwidth";
-    std::cout << std::setw(12) << "latency" << std::endl;
+    std::cout << std::setw(12) << "latency" << " - ";
+    std::cout << config.get_str_access_pattern_short(config.access_pattern) << std::endl;
     uint32_t last_lat_ps = 0;
     uint32_t last_bw_gbps = 0;
     for (auto& item : delays_and_kernels) {

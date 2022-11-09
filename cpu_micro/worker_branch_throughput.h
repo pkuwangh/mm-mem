@@ -44,7 +44,7 @@ void* branch_tp(void* ptr) {
            << " branch throughput num_chkpts=" << num_chkpts
            << " finished_branches=" << pkt->finished_branches
            << " ret=" << ret << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
     }
     return nullptr;
 }

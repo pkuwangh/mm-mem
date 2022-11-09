@@ -75,7 +75,7 @@ void* copy_fragment(void* ptr) {
            << " thread_id=" << pkt->getThreadId()
            << " memcpy num_chkpts=" << num_chkpts
            << " finished_bytes=" << pkt->finished_bytes << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
     }
     return nullptr;
 }

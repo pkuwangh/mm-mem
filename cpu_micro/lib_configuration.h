@@ -31,6 +31,7 @@ class Configuration {
     void dump() const;
 
     std::string get_str_access_pattern(uint32_t x_access_pattern) const;
+    std::string get_str_access_pattern_short(uint32_t x_access_pattern) const;
     std::string get_str_huge_page(uint32_t x_huge_page) const;
     std::string get_str_rw_mix(uint32_t x_rw_mix) const;
 

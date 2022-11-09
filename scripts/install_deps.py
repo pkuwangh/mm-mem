@@ -27,7 +27,7 @@ if platform.system() == "Linux":
             "libnuma-dev",
             "libboost-program-options-dev",
         ]
-    cmd = [pkg_manager, "install", "-y"] + pkg_list
+    cmd = ["sudo", pkg_manager, "install", "-y"] + pkg_list
 
 elif platform.system() == "Darwin":
     pkg_list = ["cmake", "boost"]
