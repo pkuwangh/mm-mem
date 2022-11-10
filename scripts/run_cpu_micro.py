@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import sys
 
 from config_huge_page import check_huge_pages, reset_huge_pages, setup_huge_pages
 from config_sysfs_settings import check_autonuma, setup_autonuma
@@ -17,6 +18,7 @@ def reserve_huge_page(num_numa_nodes: int) -> bool:
         if all_good:
             return True
     print(color_str("could not reserve huge pages to use full-random pattern", 33))
+    sys.stdout.flush()
     return False
 
 
@@ -26,6 +28,7 @@ def get_bin_path(test_name: str) -> str:
 
 def run_idle_latency(num_numa_nodes: int, num_huge_pages_orig: int):
     print(color_str("---- Running Idle Latency test ...", 32))
+    sys.stdout.flush()
     # not using huge page
     cmd = [
             get_bin_path("cpu_idle_latency"),
@@ -49,6 +52,7 @@ def run_idle_latency(num_numa_nodes: int, num_huge_pages_orig: int):
 
 def run_peak_bandwidth(num_numa_nodes: int):
     print(color_str("---- Running Peak Bandwidth test ...", 32))
+    sys.stdout.flush()
     cmd = [
             get_bin_path("cpu_peak_bandwidth"),
             "-t", str(args.target_duration),
@@ -56,6 +60,7 @@ def run_peak_bandwidth(num_numa_nodes: int):
     os.system(" ".join(cmd))
     if num_numa_nodes > 0:
         print(color_str("---- Running Bandwidth Matrix test - All Reads ...", 32))
+        sys.stdout.flush()
         cmd = [
                 get_bin_path("cpu_peak_bandwidth"),
                 "--bandwidth_matrix",
@@ -63,6 +68,7 @@ def run_peak_bandwidth(num_numa_nodes: int):
               ]
         os.system(" ".join(cmd))
         print(color_str("---- Running Bandwidth Matrix test - 1:1 Read/Write ...", 32))
+        sys.stdout.flush()
         cmd = [
                 get_bin_path("cpu_peak_bandwidth"),
                 "--bandwidth_matrix",
@@ -74,12 +80,14 @@ def run_peak_bandwidth(num_numa_nodes: int):
 
 def run_memcpy(num_numa_nodes: int):
     print(color_str("---- Running MemCpy test - Large ...", 32))
+    sys.stdout.flush()
     cmd = [
             get_bin_path("cpu_memcpy"),
             "-t", str(args.target_duration),
           ]
     os.system(" ".join(cmd))
     print(color_str("---- Running MemCpy test - Medium ...", 32))
+    sys.stdout.flush()
     cmd = [
             get_bin_path("cpu_memcpy"),
             "-t", str(args.target_duration),
@@ -90,6 +98,7 @@ def run_memcpy(num_numa_nodes: int):
 
 def run_loaded_latency(num_numa_nodes: int, num_huge_pages_orig: int):
     print(color_str("---- Running Loaded Latency test ...", 32))
+    sys.stdout.flush()
     # not using huge page
     cmd = [
         get_bin_path("cpu_loaded_latency"),
@@ -114,8 +123,13 @@ def init_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "--target-duration", "-t", type=int, default=10,
+        "--target-duration", "-t", type=int, default=2,
         help="duration in seconds for each data point"
+    )
+    parser.add_argument(
+        "--test", action="append", default=None,
+        choices=["idle_latency", "loaded_latency", "bandwidth"],
+        help="selective run certain tests; default to run all"
     )
     return parser
 
@@ -129,10 +143,14 @@ def main(args):
     if autonuma_setting_orig > 0:
         setup_autonuma(value=0)
     print(color_str("-------- Running MM-Mem --------", 35))
-    run_idle_latency(num_numa_nodes, num_huge_pages_orig)
-    run_peak_bandwidth(num_numa_nodes)
-    run_memcpy(num_numa_nodes)
-    run_loaded_latency(num_numa_nodes, num_huge_pages_orig)
+    sys.stdout.flush()
+    if args.test is None or "idle_latency" in args.test:
+        run_idle_latency(num_numa_nodes, num_huge_pages_orig)
+    if args.test is None or "bandwidth" in args.test:
+        run_peak_bandwidth(num_numa_nodes)
+        run_memcpy(num_numa_nodes)
+    if args.test is None or "loaded_latency" in args.test:
+        run_loaded_latency(num_numa_nodes, num_huge_pages_orig)
     if autonuma_setting_orig > 0:
         setup_autonuma(value=autonuma_setting_orig)
 
