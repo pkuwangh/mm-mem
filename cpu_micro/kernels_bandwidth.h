@@ -22,8 +22,8 @@ void kernel_bw_r1w1_sequential(uint64_t& ret, uint64_t*& p) {
 
 void kernel_bw_r2w1_sequential(uint64_t& ret, uint64_t*& p) {
     // 64x4
-    LP64(LP3(RD32) WR32)
-    // LP32(LP4(RD32) LP2(RD32 WR32))
+    // LP64(LP3(RD32) WR32)
+    LP32(LP4(RD32) LP2(RD32 WR32))
 }
 
 void kernel_bw_r3w1_sequential(uint64_t& ret, uint64_t*& p) {
