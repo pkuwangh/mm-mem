@@ -1,26 +1,31 @@
 [core]
-  editor = vim
-  pager = less -+$LESS -R
+    editor = vim
+    pager = less -+$LESS -R
 [push]
-  default = simple
+    default = simple
 [color]
-  diff = auto
-  status = auto
-  interactive = true
-  ui = true
-  pager = true
+    diff = auto
+    status = auto
+    interactive = true
+    ui = true
+    pager = true
 [color "branch"]
-  current = yellow reverse
-  local = yellow
-  remote = green
-  upstream = bold red
+    current = yellow reverse
+    local = yellow
+    remote = green
+    upstream = bold red
 [alias]
-  b = branch -vv
-  l = log -10 --oneline --decorate
-  ll = log -20 --oneline --decorate
-  lll = log -40 --oneline --decorate
+    b = branch -vv
+    l = log -10 --oneline --decorate
+    ll = log -20 --oneline --decorate
+    lll = log -40 --oneline --decorate
 [pager]
-  log = false
-  diff = true
-  branch = false
-  grep = false
+    log = false
+    diff = true
+    branch = false
+    grep = false
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
