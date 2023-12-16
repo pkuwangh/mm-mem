@@ -26,6 +26,7 @@ NumaConfig::NumaConfig() {
     }
     cpumask_ = numa_allocate_cpumask();
     for (uint32_t i = 0 ; i < num_numa_nodes; ++i) {
+        node_to_cpus[i] = std::vector<uint32_t>();
         int err = numa_node_to_cpus(i, cpumask_);
         if (err != 0) {
             std::cerr << "error querying CPU mask for node " << i << std::endl;
