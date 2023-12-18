@@ -25,11 +25,17 @@ else
     warnMsg "boost not found in shared place; try `module load boost`?"
     return
 fi
-
-export CPATH="${BOOST_PATH}/include"
-export LIBRARY_PATH="${BOOST_PATH}/lib64"
-export LD_LIBRARY_PATH="${BOOST_PATH}/lib64"
-
 infoMsg "Found boost at ${BOOST_PATH}/"
-ls -d $CPATH
-ls -d $LD_LIBRARY_PATH
+
+CUDA_PATH="/cm/shared/apps/cuda-latest/toolkit/current"
+infoMsg "Found cuda at ${CUDA_PATH}/"
+
+export BOOST_ROOT="${BOOST_PATH}"
+export BOOST_INCLUDEDIR="${BOOST_PATH}/include"
+export BOOST_LIBRARYDIR="${BOOST_PATH}/lib64"
+export CUDACXX="${CUDA_PATH}/bin/nvcc"
+
+export CPATH="${BOOST_PATH}/include:${CUDA_PATH}/include"
+export LIBRARY_PATH="${BOOST_PATH}/lib64:${CUDA_PATH}/lib64"
+export LD_LIBRARY_PATH="${BOOST_PATH}/lib64:${CUDA_PATH}/lib64"
+
