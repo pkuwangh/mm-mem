@@ -45,6 +45,8 @@ namespace mm_worker {
 #define MN640  MN256 MN384
 #define MN768  MN256 MN512
 #define MN1024 MN512 MN512
+#define MN1536 MN512 MN1024
+#define MN2048 MN1024 MN1024
 
 }
 

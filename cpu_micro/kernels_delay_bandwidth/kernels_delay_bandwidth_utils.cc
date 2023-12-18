@@ -30,6 +30,8 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({512,  k_r1w0_s_n512});
         delays_and_kernels.push_back({768,  k_r1w0_s_n768});
         delays_and_kernels.push_back({1024, k_r1w0_s_n1024});
+        delays_and_kernels.push_back({1536, k_r1w0_s_n1536});
+        delays_and_kernels.push_back({2048, k_r1w0_s_n2048});
     } else if (read_write_mix == 1) {
         // delays_and_kernels.push_back({0,    k_r1w1_s_n0});
         delays_and_kernels.push_back({1,    k_r1w1_s_n1});
@@ -54,6 +56,8 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({512,  k_r1w1_s_n512});
         delays_and_kernels.push_back({768,  k_r1w1_s_n768});
         delays_and_kernels.push_back({1024, k_r1w1_s_n1024});
+        delays_and_kernels.push_back({1536, k_r1w1_s_n1536});
+        delays_and_kernels.push_back({2048, k_r1w1_s_n2048});
     } else if (read_write_mix == 2) {
         // delays_and_kernels.push_back({0,    k_r2w1_s_n0});
         delays_and_kernels.push_back({1,    k_r2w1_s_n1});
@@ -81,6 +85,8 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({640,  k_r2w1_s_n640});
         delays_and_kernels.push_back({768,  k_r2w1_s_n768});
         delays_and_kernels.push_back({1024, k_r2w1_s_n1024});
+        delays_and_kernels.push_back({1536, k_r2w1_s_n1536});
+        delays_and_kernels.push_back({2048, k_r2w1_s_n2048});
     } else if (read_write_mix == 3) {
         // delays_and_kernels.push_back({0,    k_r3w1_s_n0});
         delays_and_kernels.push_back({1,    k_r3w1_s_n1});
@@ -105,6 +111,8 @@ void get_kernels_with_delays(
         delays_and_kernels.push_back({512,  k_r3w1_s_n512});
         delays_and_kernels.push_back({768,  k_r3w1_s_n768});
         delays_and_kernels.push_back({1024, k_r3w1_s_n1024});
+        delays_and_kernels.push_back({1536, k_r3w1_s_n1536});
+        delays_and_kernels.push_back({2048, k_r3w1_s_n2048});
     } else {
         delays_and_kernels.push_back({0, k_r2w1_s_n256});
     }

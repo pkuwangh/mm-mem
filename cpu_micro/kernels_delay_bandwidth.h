@@ -40,6 +40,8 @@ void k_r1w0_s_n384(uint64_t& ret, uint64_t*& p);
 void k_r1w0_s_n512(uint64_t& ret, uint64_t*& p);
 void k_r1w0_s_n768(uint64_t& ret, uint64_t*& p);
 void k_r1w0_s_n1024(uint64_t& ret, uint64_t*& p);
+void k_r1w0_s_n1536(uint64_t& ret, uint64_t*& p);
+void k_r1w0_s_n2048(uint64_t& ret, uint64_t*& p);
 
 
 void k_r1w1_s_n0(uint64_t& ret, uint64_t*& p);
@@ -65,6 +67,8 @@ void k_r1w1_s_n384(uint64_t& ret, uint64_t*& p);
 void k_r1w1_s_n512(uint64_t& ret, uint64_t*& p);
 void k_r1w1_s_n768(uint64_t& ret, uint64_t*& p);
 void k_r1w1_s_n1024(uint64_t& ret, uint64_t*& p);
+void k_r1w1_s_n1536(uint64_t& ret, uint64_t*& p);
+void k_r1w1_s_n2048(uint64_t& ret, uint64_t*& p);
 
 
 void k_r2w1_s_n0(uint64_t& ret, uint64_t*& p);
@@ -93,6 +97,8 @@ void k_r2w1_s_n512(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n640(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n768(uint64_t& ret, uint64_t*& p);
 void k_r2w1_s_n1024(uint64_t& ret, uint64_t*& p);
+void k_r2w1_s_n1536(uint64_t& ret, uint64_t*& p);
+void k_r2w1_s_n2048(uint64_t& ret, uint64_t*& p);
 
 
 void k_r3w1_s_n0(uint64_t& ret, uint64_t*& p);
@@ -118,6 +124,8 @@ void k_r3w1_s_n384(uint64_t& ret, uint64_t*& p);
 void k_r3w1_s_n512(uint64_t& ret, uint64_t*& p);
 void k_r3w1_s_n768(uint64_t& ret, uint64_t*& p);
 void k_r3w1_s_n1024(uint64_t& ret, uint64_t*& p);
+void k_r3w1_s_n1536(uint64_t& ret, uint64_t*& p);
+void k_r3w1_s_n2048(uint64_t& ret, uint64_t*& p);
 
 
 }
