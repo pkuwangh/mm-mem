@@ -24,7 +24,9 @@ enum class MemType : int {
 enum class HugePageType : int {
   NONE = 0,
   HGPG_2MB,
+  HGPG_512MB,
   HGPG_1GB,
+  HGPG_16GB,
 };
 
 

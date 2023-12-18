@@ -91,11 +91,12 @@ void Configuration::add_latency_options_() {
             "stride size in byte")
         ("use_hugepage,H",
             po::value(&use_hugepage)->default_value(0),
-            ("use huge pages\n  0 - " +
-             get_str_huge_page(0) + "\n  1 - " +
-             get_str_huge_page(1) + "\n  2 - " +
-             get_str_huge_page(2)).c_str())
-        ;
+            ("use huge pages\n  0 - " + get_str_huge_page(0) +
+             "\n  1 - " + get_str_huge_page(1) +
+             "\n  2 - " + get_str_huge_page(2) +
+             "\n  3 - " + get_str_huge_page(3) +
+             "\n  4 - " + get_str_huge_page(4)).c_str()
+        );
     if (testing_type_ == Testing_Type::LATENCY) {
         latency_options.add_options()
             ("latency_matrix",
@@ -204,7 +205,11 @@ std::string Configuration::get_str_huge_page(uint32_t x_huge_page) const {
     } else if (x_huge_page == 1) {
         return "2MB huge page";
     } else if (x_huge_page == 2) {
+        return "512MB huge page";
+    } else if (x_huge_page == 3) {
         return "1GB huge page";
+    } else if (x_huge_page == 4) {
+        return "16GB huge page";
     } else {
         return "invalid";
     }

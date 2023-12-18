@@ -8,7 +8,7 @@ def color_str(input_str: str, color_code: int) -> str:
 
 
 # cpu
-def print_cpu_info(do_print=True) -> int:
+def get_cpu_info(do_print=True) -> int:
     for_real = True
     print_cmd = False
     num_numa_nodes = 1
@@ -28,38 +28,43 @@ def print_cpu_info(do_print=True) -> int:
 
 
 # memory
-def print_mem_info(num_numa_nodes: int):
+def get_mem_info(do_print=True):
     for_real = True
     print_cmd = False
     cmd = ["lsmem"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     for line in stdout.splitlines():
         if line.startswith("Total online memory"):
-            print(color_str(line, 32))
+            if do_print:
+                print(color_str(line, 32))
     cmd = ["numastat", "-m"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
-    columns = [f"Node {x}" for x in range(num_numa_nodes)]
+    columns = [f"Node {x}" for x in range(get_cpu_info(do_print=False))]
     columns.append("Total")
-    print(" ".join([f"{x:>10s}" for x in columns]))
+    if do_print:
+        print(" ".join([f"{x:>10s}" for x in columns]))
     for line in stdout.splitlines():
         if line.startswith("MemTotal"):
             items = line.split()
             mem_total = [round(float(x) / 1024) for x in items[1:]]
-            print(" ".join([f"{x:>9d}G" for x in mem_total]))
+            if do_print:
+                print(" ".join([f"{x:>9d}G" for x in mem_total]))
+            return mem_total[:-1]
+    return []
 
 
 # gpu
-def print_gpu_info(num_numa_nodes: int):
+def get_gpu_info():
     for_real = True
     print_cmd = False
     nvidia_gpus = []
     cmd = ["lspci"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     for line in stdout.splitlines():
-        if "NVIDIA" in line:
+        if "controller: NVIDIA" in line:
             nvidia_gpus.append(line)
     print(color_str(f"Total NVidia GPUs: {len(nvidia_gpus)}", 32))
-    per_node_gpus = {x: [] for x in range(num_numa_nodes)}
+    gpus = []
     cmd = ["lspci", "-vv"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     index = 0
@@ -69,32 +74,24 @@ def print_gpu_info(num_numa_nodes: int):
             curr_device = line.rstrip()
             index += 1
         if curr_device:
-            if "NUMA node" in line:
-                items = line.split()
-                per_node_gpus[int(items[-1])].append(curr_device)
-                curr_device = ""
-            elif "Kernel driver" in line:
-                per_node_gpus[0].append(curr_device)
-                curr_device = ""
-    for k, v in per_node_gpus.items():
-        if len(v) > 0:
-            print(f"Node-{k:<5d}{v[0]}")
-        for x in v[1:]:
-            print(" " * 10 + x)
+            gpus.append(curr_device)
+            curr_device = ""
+    for gpu in gpus:
+        print(gpu)
 
 
 # nic
-def print_nic_info(num_numa_nodes: int):
+def get_nic_info():
     for_real = True
     print_cmd = False
     nics = []
     cmd = ["lspci"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     for line in stdout.splitlines():
-        if "Ethernet" in line:
+        if "Ethernet" in line or "Infiniband" in line:
             nics.append(line)
     print(color_str(f"Total NICs: {len(nics)}", 32))
-    per_node_nics = {x: [] for x in range(num_numa_nodes)}
+    nics = []
     cmd = ["lspci", "-vv"]
     stdout = run_proc_simple(cmd, for_real, print_cmd)
     index = 0
@@ -104,22 +101,14 @@ def print_nic_info(num_numa_nodes: int):
             curr_device = line.rstrip()
             index += 1
         if curr_device:
-            if "NUMA node" in line:
-                items = line.split()
-                per_node_nics[int(items[-1])].append(curr_device)
-                curr_device = ""
-            elif "Kernel driver" in line:
-                per_node_nics[0].append(curr_device)
-                curr_device = ""
-    for k, v in per_node_nics.items():
-        if len(v) > 0:
-            print(f"Node-{k:<5d}{v[0]}")
-        for x in v[1:]:
-            print(" " * 10 + x)
+            nics.append(curr_device)
+            curr_device = ""
+    for nic in nics:
+        print(nic)
 
 
 if __name__ == "__main__":
-    num_numa_nodes = print_cpu_info()
-    print_mem_info(num_numa_nodes)
-    print_gpu_info(num_numa_nodes)
-    print_nic_info(num_numa_nodes)
+    get_cpu_info()
+    get_mem_info()
+    get_gpu_info()
+    get_nic_info()
