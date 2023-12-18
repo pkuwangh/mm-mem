@@ -101,8 +101,12 @@ char* MemRegion::allocNative_(const uint64_t& size) {
         int hugepage_size_log2 = 0;
         if (hugepage_type_ == HugePageType::HGPG_2MB) {
             hugepage_size_log2 = 21;
+        } else if (hugepage_type_ == HugePageType::HGPG_512MB) {
+            hugepage_size_log2 = 29;
         } else if (hugepage_type_ == HugePageType::HGPG_1GB) {
             hugepage_size_log2 = 30;
+        } else if (hugepage_type_ == HugePageType::HGPG_16GB) {
+            hugepage_size_log2 = 34;
         }
         uint64_t padding = (size % ((uint64_t)1 << hugepage_size_log2) > 0) ? 1 : 0;
         real_size_ = ((size >> hugepage_size_log2) + padding) << hugepage_size_log2;

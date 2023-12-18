@@ -100,7 +100,7 @@ void setup_and_run(const mm_utils::Configuration& config) {
             std::cout << std::endl << std::setw(25) << "Node-" + std::to_string(i);
             std::cout << std::flush;
             for (uint32_t j = 0; j < config.numa_config.num_numa_nodes; ++j) {
-                if (config.numa_config.node_to_mem.at(j) < ((int64_t)1 << 30)) {
+                if (config.numa_config.node_to_mem.at(j) < ((int64_t)2 << 30)) {
                     continue;
                 }
                 worker_manager.reset();

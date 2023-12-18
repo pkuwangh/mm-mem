@@ -26,7 +26,7 @@ region size in KB: 524288
 chunk size in KB:  524288
 stride size in B:  128
 access pattern:    2 - random in full region
-use hugepage:      2 - 1GB huge page
+use hugepage:      3 - 1GB huge page
 target duration:   10
 Idle Latency        Node-0
 Node-0              115.2
@@ -107,7 +107,7 @@ reverting changes to huge pages settings ...
 Option 1 - Use huge page and random-in-full-region pattern
 ```
 ./scripts/config_huge_page.py -s
-./bin/cpu_idle_latency --region_size 524288 --access_pattern 2 --use_hugepage 2 --target_duration 10
+./bin/cpu_idle_latency --region_size 524288 --access_pattern 2 --use_hugepage 3 --target_duration 10
 ./scripts/config_huge_page.py -r
 ```
 This setup a 512MB region using 1GB pages, randomly pointer-chase through the whole region for 10 seconds.
@@ -129,7 +129,7 @@ Use nproc number of threads, each streaming through a 128MB region; sweep differ
 Use 1 latency thread to do random-in-chunk pointer-chasing; other nproc-1 threads generating variable load with 2:1 read/write mix
 ```
 ./scripts/config_huge_page.sh -s
-./bin/cpu_loaded_latency --region_size 131072 --access_pattern 2 --use_hugepage 2 --read_write_mix 2 --target_duration 10
+./bin/cpu_loaded_latency --region_size 131072 --access_pattern 2 --use_hugepage 3 --read_write_mix 2 --target_duration 10
 ./scripts/config_huge_page.sh -r
 ```
 
