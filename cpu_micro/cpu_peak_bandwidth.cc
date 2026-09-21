@@ -94,7 +94,12 @@ void setup_and_run(const mm_utils::Configuration& config) {
             std::cout << std::setw(10) << "Node-" + std::to_string(j);
         }
         for (uint32_t i = 0; i < config.numa_config.num_numa_nodes; ++i) {
-            if (config.numa_config.node_to_cpus.at(i).size() == 0) {
+            // Pin only to cpus we may actually run on. node_to_cpus is the raw
+            // machine topology and can name cpus outside our affinity mask; a
+            // worker pinned to one of those may never be scheduled, and the run
+            // then hangs in join() with no useful output.
+            const auto& node_cpus = config.numa_config.node_to_allowed_cpus.at(i);
+            if (node_cpus.size() == 0) {
                 continue;
             }
             std::cout << std::endl << std::setw(25) << "Node-" + std::to_string(i);
@@ -104,10 +109,10 @@ void setup_and_run(const mm_utils::Configuration& config) {
                     continue;
                 }
                 worker_manager.reset();
-                uint32_t node_cpu_count = config.numa_config.node_to_cpus.at(i).size();
+                uint32_t node_cpu_count = node_cpus.size();
                 worker_manager = std::make_shared<mm_worker::MemLatBwManager>(
                     std::min(config.num_threads, node_cpu_count),
-                    config.numa_config.node_to_cpus.at(i),
+                    node_cpus,
                     true,   // always enable binding
                     config.verbose
                 );

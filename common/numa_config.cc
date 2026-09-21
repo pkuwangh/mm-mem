@@ -27,6 +27,7 @@ NumaConfig::NumaConfig() {
     cpumask_ = numa_allocate_cpumask();
     for (uint32_t i = 0 ; i < num_numa_nodes; ++i) {
         node_to_cpus[i] = std::vector<uint32_t>();
+        node_to_allowed_cpus[i] = std::vector<uint32_t>();
         int err = numa_node_to_cpus(i, cpumask_);
         if (err != 0) {
             std::cerr << "error querying CPU mask for node " << i << std::endl;
@@ -35,6 +36,11 @@ NumaConfig::NumaConfig() {
         for (uint32_t j = 0; j < num_cpus_possible; ++j) {
             if (numa_bitmask_isbitset(cpumask_, j) > 0) {
                 node_to_cpus[i].push_back(j);
+                // numa_all_cpus_ptr is the set we may run on; it is the same
+                // mask all_allowed_cpus above is built from.
+                if (numa_bitmask_isbitset(numa_all_cpus_ptr, j) > 0) {
+                    node_to_allowed_cpus[i].push_back(j);
+                }
             }
         }
     }
@@ -72,6 +78,16 @@ void NumaConfig::dump() const {
             std::cout << " " << idx;
         }
         std::cout << std::endl;
+        // Only worth a line when we cannot use the whole node, which is also
+        // exactly when the numbers below cover fewer cpus than they look like.
+        const auto& usable = node_to_allowed_cpus.at(item.first);
+        if (usable.size() != item.second.size()) {
+            std::cout << "\tNode " << item.first << " usable:";
+            for (const auto& idx : usable) {
+                std::cout << " " << idx;
+            }
+            std::cout << std::endl;
+        }
     }
 
     std::cout << "Memory" << std::endl;
