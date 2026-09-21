@@ -33,7 +33,13 @@ class NumaConfig {
     std::vector<uint32_t> all_cpus;
     std::vector<uint32_t> all_allowed_cpus;
     std::map<uint32_t, int64_t> node_to_mem;
+    // Every cpu belonging to a node, whether or not we may run on it. This is
+    // the machine's topology, so it is what dump() reports.
     std::map<uint32_t, std::vector<uint32_t>> node_to_cpus;
+    // The subset of the above we are actually allowed to run on. Anything that
+    // pins a worker must use this, not node_to_cpus: binding to a cpu outside
+    // our affinity mask is never what we want.
+    std::map<uint32_t, std::vector<uint32_t>> node_to_allowed_cpus;
 
   private:
     struct bitmask* cpumask_ = nullptr;

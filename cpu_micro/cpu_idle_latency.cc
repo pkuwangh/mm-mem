@@ -71,7 +71,9 @@ void setup_and_run(const mm_utils::Configuration& config) {
             std::cout << std::setw(10) << "Node-" + std::to_string(j);
         }
         for (uint32_t i = 0; i < config.numa_config.num_numa_nodes; ++i) {
-            if (config.numa_config.node_to_cpus.at(i).size() == 0) {
+            // See cpu_peak_bandwidth.cc: pin only to cpus we may run on.
+            const auto& node_cpus = config.numa_config.node_to_allowed_cpus.at(i);
+            if (node_cpus.size() == 0) {
                 continue;
             }
             std::cout << std::endl << std::setw(40) << "Node-" + std::to_string(i);
@@ -81,10 +83,10 @@ void setup_and_run(const mm_utils::Configuration& config) {
                     continue;
                 }
                 worker_manager.reset();
-                uint32_t node_cpu_count = config.numa_config.node_to_cpus.at(i).size();
+                uint32_t node_cpu_count = node_cpus.size();
                 worker_manager = std::make_shared<mm_worker::MemLatBwManager>(
                     std::min(config.num_threads, node_cpu_count),
-                    config.numa_config.node_to_cpus.at(i),
+                    node_cpus,
                     true,   // always enable binding
                     config.verbose
                 );
