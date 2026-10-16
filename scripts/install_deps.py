@@ -17,7 +17,7 @@ if platform.system() == "Linux":
         print("dnf | yum | apt not available?!")
         exit(1)
     if pkg_manager == "dnf" or pkg_manager == "yum":
-        pkg_list = ["cmake3", "gcc", "gcc-c++", "numactl-devel", "boost-devel"]
+        pkg_list = ["cmake3", "gcc", "gcc-c++", "numactl-devel"]
     elif pkg_manager == "apt":
         pkg_list = [
             "numactl",
@@ -25,12 +25,11 @@ if platform.system() == "Linux":
             "gcc",
             "g++",
             "libnuma-dev",
-            "libboost-program-options-dev",
         ]
     cmd = ["sudo", pkg_manager, "install", "-y"] + pkg_list
 
 elif platform.system() == "Darwin":
-    pkg_list = ["cmake", "boost"]
+    pkg_list = ["cmake"]
     cmd = ["brew", "install"] + pkg_list
 
 else:

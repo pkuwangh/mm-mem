@@ -3,15 +3,11 @@
 
 #include <memory>
 #include <string>
-#include <boost/program_options.hpp>
+#include "common/command_line.h"
 
 #include "common/numa_config.h"
 
 namespace mm_utils {
-
-namespace {
-    namespace po = boost::program_options;
-}
 
 enum class Testing_Type : int {
     LATENCY,
@@ -57,7 +53,8 @@ class Configuration {
 
   private:
     Testing_Type testing_type_;
-    std::shared_ptr<po::options_description> desc_ = nullptr;
+    CommandLine options_;
+    bool help_ = false;
 
     void add_generic_options_();
     void add_latency_options_();

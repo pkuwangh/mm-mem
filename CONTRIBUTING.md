@@ -34,3 +34,14 @@ requires a release date and nonempty notes, and omits the Released subsection
 from the published notes. A manual run can publish an existing tag; an existing
 GitHub release is not overwritten. Historical tags must already contain a
 matching changelog section to work with this workflow.
+
+## Parser checks
+
+The command-line utility has a standalone C++14 regression test. Run it without
+NUMA or other platform dependencies:
+
+```sh
+mkdir -p build
+g++ -std=c++14 -Wall -Wextra -Werror -I. tests/command_line_test.cc -o build/command_line_test
+./build/command_line_test
+```

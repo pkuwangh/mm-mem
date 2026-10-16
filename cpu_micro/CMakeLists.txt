@@ -21,11 +21,11 @@ foreach(TEST ${TESTS})
   if (APPLE)
     target_link_libraries(${TEST} LINK_PUBLIC
       MmMemSys
-      boost_program_options pthread)
+      pthread)
   else()
     target_link_libraries(${TEST} LINK_PUBLIC
       MmMemSys
-      boost_program_options numa pthread)
+      numa pthread)
   endif()
 
   install(TARGETS ${TEST} DESTINATION "bin")

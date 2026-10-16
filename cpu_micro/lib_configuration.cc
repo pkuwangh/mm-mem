@@ -19,7 +19,7 @@ Configuration::Configuration(Testing_Type testing_type) :
     } else if (testing_type == Testing_Type::BRANCH_THROUGHPUT) {
         test_name = "Branch taken throughput";
     }
-    desc_ = std::make_shared<po::options_description>(test_name);
+    options_ = CommandLine(test_name);
 
     add_generic_options_();
     if (testing_type == Testing_Type::LATENCY || testing_type == Testing_Type::LATENCY_BANDWIDTH) {
@@ -43,31 +43,19 @@ void Configuration::add_generic_options_() {
     if (testing_type_ == Testing_Type::BRANCH_THROUGHPUT) {
         default_num_threads = 1;
     }
-    po::options_description generic_options("Generic options");
-    generic_options.add_options()
-        ("help,h", "print usage message")
-        ("target_duration,t",
-            po::value(&target_duration_s)->default_value(10), "duration")
-        ("num_threads,n",
-            po::value(&num_threads)->default_value(default_num_threads),
-            "total number of threads")
-       ;
+    options_.group("Generic options");
+    options_.flag("help,h", &help_, "print usage message");
+    options_.value("target_duration,t", &target_duration_s, 10, "duration");
+    options_.value("num_threads,n", &num_threads, default_num_threads,
+            "total number of threads");
     if (testing_type_ < Testing_Type::BRANCH_THROUGHPUT) {
-        generic_options.add_options()
-            ("region_size,b",
-                po::value(&region_size_kb)->default_value(default_region_size_kb),
-                "region size in KB")
-            ;
+        options_.value("region_size,b", &region_size_kb, default_region_size_kb,
+                "region size in KB");
     }
-    generic_options.add_options()
-        ("no_binding",
-            po::bool_switch(&no_binding),
-            "NOT to do thread-to-core binding")
-        ("verbose,v",
-            po::bool_switch(&verbose),
-            "enable verbose output")
-        ;
-    desc_->add(generic_options);
+    options_.flag("no_binding", &no_binding,
+            "NOT to do thread-to-core binding");
+    options_.flag("verbose,v", &verbose,
+            "enable verbose output");
 }
 
 void Configuration::add_latency_options_() {
@@ -75,22 +63,17 @@ void Configuration::add_latency_options_() {
     if (testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
         default_chunk_size_kb = 64;
     }
-    po::options_description latency_options("Latency thread options");
-    latency_options.add_options()
-        ("access_pattern,p",
-            po::value(&access_pattern)->default_value(1),
+    options_.group("Latency thread options");
+    options_.value("access_pattern,p", &access_pattern, 1,
             ("access pattern\n  0 - " +
              get_str_access_pattern(0) + "\n  1 - " +
              get_str_access_pattern(1) + "\n  2 - " +
-             get_str_access_pattern(2)).c_str())
-        ("chunk_size,c",
-            po::value(&chunk_size_kb)->default_value(default_chunk_size_kb),
-            "chunk size in KB - target L1TLB can cover")
-        ("stride_size,s",
-            po::value(&stride_size_b)->default_value(128),
-            "stride size in byte")
-        ("use_hugepage,H",
-            po::value(&use_hugepage)->default_value(0),
+             get_str_access_pattern(2)).c_str());
+    options_.value("chunk_size,c", &chunk_size_kb, default_chunk_size_kb,
+            "chunk size in KB - target L1TLB can cover");
+    options_.value("stride_size,s", &stride_size_b, 128,
+            "stride size in byte");
+    options_.value("use_hugepage,H", &use_hugepage, 0,
             ("use huge pages\n  0 - " + get_str_huge_page(0) +
              "\n  1 - " + get_str_huge_page(1) +
              "\n  2 - " + get_str_huge_page(2) +
@@ -98,13 +81,9 @@ void Configuration::add_latency_options_() {
              "\n  4 - " + get_str_huge_page(4)).c_str()
         );
     if (testing_type_ == Testing_Type::LATENCY) {
-        latency_options.add_options()
-            ("latency_matrix",
-                po::bool_switch(&latency_matrix),
-                "Measure local and cross-socket latencies")
-            ;
+        options_.flag("latency_matrix", &latency_matrix,
+                "Measure local and cross-socket latencies");
     }
-    desc_->add(latency_options);
 }
 
 void Configuration::add_bandwidth_options_() {
@@ -116,56 +95,44 @@ void Configuration::add_bandwidth_options_() {
             "\n" + std::to_string(read_write_mix_sweep) +
             " - " + get_str_rw_mix(read_write_mix_sweep));
     }
-    po::options_description bandwidth_options("Bandwidth threads options");
-    bandwidth_options.add_options()
-        ("read_write_mix,m",
-            po::value(&read_write_mix)->default_value(default_read_write_mix),
+    options_.group("Bandwidth threads options");
+    options_.value("read_write_mix,m", &read_write_mix, default_read_write_mix,
             ("read/write mix\n  0 - " +
              get_str_rw_mix(0) + "\n  1 - " +
              get_str_rw_mix(1) + "\n  2 - " +
              get_str_rw_mix(2) + "\n  3 - " +
-             get_str_rw_mix(3) + additional_msg).c_str())
-        ;
+             get_str_rw_mix(3) + additional_msg).c_str());
     if (testing_type_ == Testing_Type::LATENCY_BANDWIDTH) {
         int32_t default_load_gen_delay = 0;
-        bandwidth_options.add_options()
-            ("load_gen_delay,d",
-                po::value(&load_gen_delay)->default_value(default_load_gen_delay),
-                "delay slots b/w memory requests for load generation threads")
-            ;
+        options_.value("load_gen_delay,d", &load_gen_delay, default_load_gen_delay,
+                "delay slots b/w memory requests for load generation threads");
     }
     if (testing_type_ == Testing_Type::BANDWIDTH) {
-        bandwidth_options.add_options()
-            ("bandwidth_matrix",
-                po::bool_switch(&bandwidth_matrix),
-                "Measure local and cross-socket bandwidth")
-            ;
+        options_.flag("bandwidth_matrix", &bandwidth_matrix,
+                "Measure local and cross-socket bandwidth");
     }
-    desc_->add(bandwidth_options);
 }
 
 void Configuration::add_memcpy_options_() {
     uint64_t default_fragment_size = 0;
-    po::options_description memcpy_options("Memcpy options");
-    memcpy_options.add_options()
-        ("fragment_size,f",
-            po::value(&fragment_size_b)->default_value(default_fragment_size),
+    options_.group("Memcpy options");
+    options_.value("fragment_size,f", &fragment_size_b, default_fragment_size,
             ("fragment size in byte of each memcpy invocation"
              "\n  0 - same as region size"
-             "\n  e.g. 4096 - copy each 4KB fragment one by one"))
-        ("memcpy_matrix",
-            po::bool_switch(&memcpy_matrix),
-            "Measure local and cross-socket memcpy bandwidth")
-        ;
-    desc_->add(memcpy_options);
+             "\n  e.g. 4096 - copy each 4KB fragment one by one"));
+    options_.flag("memcpy_matrix", &memcpy_matrix,
+            "Measure local and cross-socket memcpy bandwidth");
 }
 
 int Configuration::parse_options(int argc, char** argv) {
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).options(*desc_).run(), vm);
-    po::notify(vm);
-    if (vm.count("help")) {
-        std::cerr << *desc_ << std::endl;
+    try {
+        options_.parse(argc, argv);
+    } catch (const std::invalid_argument& error) {
+        std::cerr << "Error: " << error.what() << "\nUse --help for usage.\n";
+        return 1;
+    }
+    if (help_) {
+        options_.help(std::cerr);
         return 1;
     }
     // auto corrections

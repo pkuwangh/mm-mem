@@ -21,9 +21,9 @@ modernizing the code.
 
 ## Building and checking changes
 
-Dependencies include a C++14 compiler, CMake, Make, Boost.Program_options, and
+Dependencies include a C++14 compiler, CMake, Make, and
 Linux libnuma development files. `scripts/install_deps.py` installs system
-packages; inspect it before running it. macOS uses Boost and pthread without
+packages; inspect it before running it. macOS uses pthread without
 libnuma.
 
 ```sh
@@ -40,7 +40,8 @@ cmake --build build/release --parallel 2
 cmake --install build/release
 ```
 
-There is currently no dedicated automated test suite. For C++ changes, build the
+Run the standalone parser regression test in [CONTRIBUTING.md](CONTRIBUTING.md)
+when changing command-line parsing. For C++ changes, build the
 affected targets and run a short, bounded benchmark relevant to the change on
 available hardware. Inspect `--help` for supported options. For example:
 
