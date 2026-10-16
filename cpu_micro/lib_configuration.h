@@ -33,6 +33,7 @@ class Configuration {
 
     const mm_utils::NumaConfig numa_config;
 
+    uint32_t branch_case = 0;
     uint32_t num_threads = 1;
     uint64_t region_size_kb = 128 * 1024;
     bool     no_binding = false;

@@ -22,6 +22,11 @@ Configuration::Configuration(Testing_Type testing_type) :
     options_ = CommandLine(test_name);
 
     add_generic_options_();
+    if (testing_type == Testing_Type::BRANCH_THROUGHPUT) {
+        options_.group("Branch throughput options");
+        options_.value("branch_case", &branch_case, 0,
+            "0: sweep all cases; 1-12: select one case (see README)");
+    }
     if (testing_type == Testing_Type::LATENCY || testing_type == Testing_Type::LATENCY_BANDWIDTH) {
         add_latency_options_();
     }

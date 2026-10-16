@@ -149,3 +149,49 @@ Again, if huge page is not available, we can use random-in-chunk pattern
 ```
 ./bin/cpu_loaded_latency --region_size 131072 --chunk_size 128 --access_pattern 1 --read_write_mix 2 --target_duration 10
 ```
+
+### Individual Test - Branch Throughput
+
+```sh
+./bin/cpu_branch_throughput -t 10
+./bin/cpu_branch_throughput --branch_case 2 -t 5
+```
+
+This benchmark measures predictable **taken** branches using explicit x86-64 or
+AArch64 assembly. It sweeps unconditional and conditional forward-branch chains
+with 8, 32, or 128 branches and 16- or 64-byte target spacing. Branches skip the
+padding between targets. Arithmetic occurs only once per chain, so dependent
+additions no longer limit every branch as they did in the original C++ loop.
+
+| Cases | Branch type | Target spacing | Chain lengths, in case order |
+| --- | --- | --- | --- |
+| 1–3 | Unconditional | 16 bytes | 8, 32, 128 |
+| 4–6 | Unconditional | 64 bytes | 8, 32, 128 |
+| 7–9 | Conditional, always taken | 16 bytes | 8, 32, 128 |
+| 10–12 | Conditional, always taken | 64 bytes | 8, 32, 128 |
+
+`--branch_case 0` (the default) runs the full sweep. `-t` is the total measurement
+budget per worker, split equally among selected cases; warmup and batch completion
+add some overhead. Each row reports:
+
+- `case`, `thread`: case number and worker index.
+- `chain`, `spacing`: forward branches per chain and target spacing in bytes.
+- `GBr/s`: billions of taken branches per elapsed second for that worker.
+- `Br/cycle`, `cycles/Br`: taken branches per measured user-space CPU cycle and
+  its reciprocal. Linux uses a per-thread hardware cycle counter, without sudo
+  when permissions allow. These columns show `n/a` when counters are unavailable
+  or multiplexed; macOS currently reports timed throughput only.
+
+Counts include the loop-back branch when taken and exclude its final not-taken
+exit. They are derived from the assembly's known execution count, rather than a
+hardware branch counter. Hardware cycles cover the measured batches and small
+amounts of timer/control overhead. They are CPU cycles, not reference-clock ticks.
+
+The summary shows the best observed GBr/s and Br/cycle independently across the
+selected layouts. This is a practical estimate of peak predictable taken-branch
+throughput, not a guarantee of the hardware maximum for every branch pattern.
+It does not measure misprediction penalty, indirect branches, or not-taken branch
+throughput. Use one pinned worker (the default) for a per-core comparison; with
+`-n`, rows and maxima remain per worker rather than aggregate rates. Repeat runs
+on an otherwise idle machine, and record the CPU, compiler, and VM environment.
+Results are not directly comparable to the old arithmetic-dependent loop.

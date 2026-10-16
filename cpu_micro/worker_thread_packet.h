@@ -63,8 +63,12 @@ class MemLatBwThreadPacket : public CpuMicroThreadPacket {
 
 class BrPredThreadPacket : public CpuMicroThreadPacket {
   public:
+    unsigned case_index = 0;
+    double sample_duration = 0;
     // output
     uint64_t finished_branches = 0;
+    double cycles = 0;
+    std::string counter_error;
 };
 
 

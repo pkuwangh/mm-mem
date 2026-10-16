@@ -2,7 +2,19 @@
 
 ## Latest
 
+### Fixed
+
+- Fix stats collection for selected PIDs and long process names; fail on no
+  matches instead of falling back to system-wide monitoring. Collect user-space
+  process counters and CPU utilization concurrently for the requested duration,
+  and report collector failures with a nonzero exit status.
+
 ### Changed
+
+- Replace the arithmetic-dependent branch benchmark with x86-64/AArch64 taken-branch
+  assembly sweeps, per-worker results, and optional Linux hardware cycles per branch.
+  Add `--branch_case` to isolate a layout; `-t` is split across the sweep. Results
+  and output format differ from the previous loop benchmark.
 
 - Label branch throughput as `GBr/s` (billions of branches per second).
 - Replace Boost.Program_options with a local C++14 command-line parser and remove

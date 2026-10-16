@@ -45,3 +45,16 @@ mkdir -p build
 g++ -std=c++14 -Wall -Wextra -Werror -I. tests/command_line_test.cc -o build/command_line_test
 ./build/command_line_test
 ```
+
+## Branch benchmark checks
+
+After building, run the CLI, sweep, and x86-64 disassembly checks:
+
+```sh
+python3 tests/check_branch_throughput.py build/release/cpu_micro/cpu_branch_throughput
+```
+
+These checks exercise all layouts, single-case selection, multiple workers,
+and invalid inputs. On Linux x86-64, they also use `objdump` to verify branch
+counts and aligned targets in the emitted kernels. Run on actual ARM hardware
+before claiming ARM performance validation; cross-compilation only checks syntax.
