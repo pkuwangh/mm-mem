@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""Inspect and configure Linux huge-page reservations on each NUMA node.
+
+By default, print the current reservations. --setup drops page caches, requests
+memory compaction, and attempts to reserve 2 GiB per eligible node using the
+largest supported huge-page size up to 1 GiB. --reset clears reservations for
+that selected page size. Changing these kernel settings requires write access
+to the relevant /proc and /sys files, normally as root. Imported helpers can
+also save and restore reservation counts for the benchmark runner."""
+
 import argparse
 import os
 from typing import Dict, List

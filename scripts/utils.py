@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""Provide shared command-execution and repository-path helpers for scripts.
+
+Wrap shell commands and subprocesses with optional command logging, dry runs,
+environment overrides, and captured or file-redirected output. read_env returns
+the repository root derived from this file's location and the user's HOME.
+This module is intended for import and has no standalone command-line action."""
+
 import os
 import subprocess
 from typing import Dict, List, Optional

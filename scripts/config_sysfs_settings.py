@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""Inspect or change Linux automatic NUMA balancing through /proc/sys.
+
+Use the autonuma subcommand to print the current setting, --setup to enable
+balancing, or --reset to disable it. Changes affect the whole host and require
+write access to /proc/sys/kernel/numa_balancing, normally as root. The benchmark
+runner imports these helpers to control balancing during measurements."""
+
 import argparse
 import os
 

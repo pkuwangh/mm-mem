@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""Print a Linux host's CPU, NUMA memory, GPU, and network-device inventory.
+
+Use lscpu, lsmem, numastat, and lspci to report CPU counts and NUMA CPU mappings,
+per-node memory capacity, NVIDIA GPU devices, and Ethernet/InfiniBand devices.
+The benchmark scripts also import the CPU/memory queries and colored-output
+helper from this module."""
+
 from utils import run_proc_simple
 
 
