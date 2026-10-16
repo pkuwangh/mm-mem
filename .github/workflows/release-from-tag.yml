@@ -1,0 +1,98 @@
+name: Release from tag
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (for example, 1.2.0)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release tag
+        id: tag
+        env:
+          RAW_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          tag = os.environ["RAW_TAG"]
+          if not re.fullmatch(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", tag):
+              sys.exit("Expected a release tag in MAJOR.MINOR.PATCH format (without v)")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"tag={tag}\n")
+          PY
+
+      - name: Checkout tagged source
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          persist-credentials: false
+
+      - name: Extract changelog section for tag
+        env:
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          python3 - <<'PY'
+          from datetime import date
+          from pathlib import Path
+          import os
+          import re
+          import sys
+
+          version = os.environ["RELEASE_TAG"]
+          heading = f"## {version}"
+          lines = Path("CHANGELOG.md").read_text(encoding="utf-8").splitlines()
+          matches = [idx for idx, line in enumerate(lines) if line == heading]
+          if len(matches) != 1:
+              sys.exit(f"Expected exactly one changelog heading: {heading}")
+          start = matches[0] + 1
+          end = next((idx for idx in range(start, len(lines)) if lines[idx].startswith("## ")), len(lines))
+          notes = []
+          release_dates = []
+          in_released = False
+          for line in lines[start:end]:
+              if line.startswith("### "):
+                  in_released = line == "### Released"
+                  if in_released:
+                      continue
+              if in_released:
+                  if not line.strip():
+                      continue
+                  if not re.fullmatch(r"- \d{4}-\d{2}-\d{2}", line):
+                      sys.exit("Released must contain a date in '- YYYY-MM-DD' format")
+                  release_dates.append(date.fromisoformat(line[2:]))
+              else:
+                  notes.append(line)
+          if len(release_dates) != 1:
+              sys.exit(f"Expected exactly one release date for {version}")
+          if not any(line.strip() and not line.startswith("#") for line in notes):
+              sys.exit(f"Release notes are empty for {version}")
+          Path("release_notes.md").write_text("\n".join(notes).strip() + "\n", encoding="utf-8")
+          PY
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --title "Release $RELEASE_TAG" \
+            --notes-file release_notes.md
