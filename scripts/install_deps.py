@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""Install MM-Mem build dependencies using the host's package manager.
+
+On Linux, select dnf, yum, or apt and invoke sudo to install CMake, GCC, and NUMA
+packages. On macOS, install CMake through Homebrew. This script executes package
+installation immediately when run or imported; it has no command-line options."""
+
 import os
 import platform
 import shutil

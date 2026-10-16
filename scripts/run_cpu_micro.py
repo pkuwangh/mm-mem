@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""Run MM-Mem's CPU memory benchmarks from the repository's bin directory.
+
+Run idle-latency, peak-bandwidth, memcpy, and loaded-latency measurements,
+including NUMA matrices and huge-page variants where applicable. --test selects
+benchmark groups; --target-duration sets seconds per data point. This Linux
+runner disables automatic NUMA balancing when enabled and attempts huge-page
+reservation, cache dropping, and memory compaction for latency tests. It restores
+saved balancing and reservation settings during normal completion; cleanup is
+not guaranteed after interruption. Kernel setting changes normally require root."""
+
 import argparse
 import os
 import sys

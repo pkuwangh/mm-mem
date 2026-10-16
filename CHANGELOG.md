@@ -11,6 +11,8 @@
 
 ### Added
 
+- Module docstrings describing each Python script, its usage, and system effects.
+
 - Contributor guidance for coding agents in `AGENTS.md`.
 - Contribution and release procedures in `CONTRIBUTING.md`.
 - This changelog, including summaries of the existing releases.

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""Report Linux CPU utilization and hardware performance counters.
+
+Run mpstat first, then perf stat to collect elapsed time, CPU time, cycles, and
+instructions over sampling intervals. Options select explicit PIDs or processes
+matched by pgrep; without a selection, counters are collected system-wide.
+Sampling is sequential, and --interval is divided among selected PIDs. Requires
+mpstat, perf, and permission to access the requested performance counters."""
+
 import argparse
 import subprocess
 from typing import List
