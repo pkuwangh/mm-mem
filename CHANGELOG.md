@@ -2,6 +2,13 @@
 
 ## Latest
 
+### Changed
+
+- Label branch throughput as `GBr/s` (billions of branches per second).
+- Replace Boost.Program_options with a local C++14 command-line parser and remove
+  Boost from build and installation requirements. Integer options reject negative
+  unsigned values and overflow; option names, aliases, and defaults are preserved.
+
 ### Added
 
 - Contributor guidance for coding agents in `AGENTS.md`.

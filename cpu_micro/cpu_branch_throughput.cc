@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     }
     double taken_br_tp = total_branches / total_exec_time / 1e9;
     std::cout << "Branch throughput: " << std::setprecision(4) << taken_br_tp;
-    std::cout << " B/s | " << total_branches << " / ";
+    std::cout << " GBr/s | " << total_branches << " / ";
     std::cout << std::setprecision(4) << total_exec_time;
     std::cout << std::endl;
     return 0;
