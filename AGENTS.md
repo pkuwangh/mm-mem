@@ -22,9 +22,9 @@ modernizing the code.
 ## Building and checking changes
 
 Dependencies include a C++14 compiler, CMake, Make, and
-Linux libnuma development files. `scripts/install_deps.py` installs system
-packages; inspect it before running it. macOS uses pthread without
-libnuma.
+Linux libnuma development files. `scripts/install_deps_sudo.sh` installs system
+packages; `scripts/install_deps_conda.sh` creates or updates a user-owned build
+environment. Inspect either before running it. macOS uses pthread without libnuma.
 
 ```sh
 make
@@ -66,9 +66,10 @@ full benchmark run.
 - For performance comparisons, record the commit/version, CPU, OS, compiler,
   command, thread count, memory placement, and huge-page settings. Compare under
   equivalent conditions and repeat measurements before drawing conclusions.
-- The full runner (`scripts/run_cpu_micro.py`) can reserve huge pages and change
-  automatic NUMA balancing. Use individual binaries for routine smoke checks;
-  run host configuration helpers only when those system changes are intended.
+- The full runner (`scripts/run_cpu_micro.py`) automatically uses available root
+  or noninteractive sudo access to configure huge pages and NUMA balancing. Use
+  `--no-system-config` or individual binaries for routine smoke checks. Use
+  `--dry-run` to inspect plans without probing sudo or changing host settings.
 
 ## Change workflow
 

@@ -1,4 +1,6 @@
 #include <cassert>
+#include <cerrno>
+#include <cstring>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -90,7 +92,8 @@ char* MemRegion::allocNative_(const uint64_t& size) {
         }
         long ret = set_mempolicy(mode, &nodemask, maxnode);
         if (ret < 0) {
-            error_("set_mempolicy error");
+            error_("NUMA placement failed: " + std::string(std::strerror(errno)) +
+                   ". Check allowed memory nodes/container policy; use --no-matrices in the runner to omit placement tests.");
         }
 #else
         // TODO
@@ -127,7 +130,8 @@ char* MemRegion::allocNative_(const uint64_t& size) {
         ));
 #endif
         if ((int64_t)addr == (int64_t)-1) {
-            error_("mmap failed for hugepage");
+            error_("Huge-page mmap failed: " + std::string(std::strerror(errno)) +
+                   ". Check available huge pages and allocation permissions.");
         }
     } else {
         real_size_ = size;
@@ -136,6 +140,9 @@ char* MemRegion::allocNative_(const uint64_t& size) {
 #else
         addr = (char*)aligned_alloc(os_page_size_, size);
 #endif
+    }
+    if (!addr) {
+        error_("Memory allocation failed: " + std::string(std::strerror(errno)));
     }
     return addr;
 }
