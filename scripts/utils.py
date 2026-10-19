@@ -2,7 +2,7 @@
 
 """Provide shared command-execution and repository-path helpers for scripts.
 
-Wrap shell commands and subprocesses with optional command logging, dry runs,
+Wrap argument-list commands and subprocesses with optional command logging, dry runs,
 environment overrides, and captured or file-redirected output. read_env returns
 the repository root derived from this file's location and the user's HOME.
 This module is intended for import and has no standalone command-line action."""
@@ -21,17 +21,7 @@ def exec_cmd(
     if print_cmd:
         print(cmd_str)
     if for_real:
-        os.system(cmd_str)
-
-
-def _launch_proc(cmd, cwd, stdout, stderr, env):
-    return subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        stdout=stdout,
-        stderr=stderr,
-        env=env,
-    )
+        subprocess.run(cmd, check=True)
 
 
 def run_proc(
@@ -45,20 +35,18 @@ def run_proc(
     env_setting = [f"{k}={v}" for k, v in env.items()]
     if print_cmd:
         print(" ".join(env_setting + cmd))
+    if not for_real:
+        return None
     exec_env = os.environ.copy()
-    if for_real:
-        for k, v in env.items():
-            exec_env[k] = v
-        if outfile:
-            with open(outfile, "wt") as fp:
-                proc = _launch_proc(cmd, cwd, fp, fp, exec_env)
-                proc.wait()
-            return None
-        else:
-            proc = _launch_proc(cmd, cwd, subprocess.PIPE, subprocess.STDOUT, exec_env)
-            (stdout, _) = proc.communicate()
-            return stdout.decode("utf-8")
-    return None
+    exec_env.update(env)
+    if outfile:
+        with open(outfile, "wt") as output:
+            subprocess.run(cmd, cwd=cwd, env=exec_env, stdout=output,
+                           stderr=subprocess.STDOUT, check=True)
+        return None
+    result = subprocess.run(cmd, cwd=cwd, env=exec_env, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, check=True, universal_newlines=True)
+    return result.stdout
 
 
 def run_proc_simple(

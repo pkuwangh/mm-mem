@@ -58,3 +58,14 @@ These checks exercise all layouts, single-case selection, multiple workers,
 and invalid inputs. On Linux x86-64, they also use `objdump` to verify branch
 counts and aligned targets in the emitted kernels. Run on actual ARM hardware
 before claiming ARM performance validation; cross-compilation only checks syntax.
+
+## Python script checks
+
+```sh
+python3 -m unittest discover -s tests -p 'test_*.py'
+bash -n scripts/install_deps_sudo.sh scripts/install_deps_conda.sh
+```
+
+The setup tests use temporary files and mock privilege/installer commands; they
+never install packages or change kernel settings. For a real runner smoke check,
+use `--no-system-config --no-matrices --test idle_latency -b 4096 -t 1`.

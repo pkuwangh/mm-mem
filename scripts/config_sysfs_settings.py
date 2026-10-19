@@ -1,75 +1,61 @@
 #!/usr/bin/env python3
 
-"""Inspect or change Linux automatic NUMA balancing through /proc/sys.
+"""Inspect or explicitly enable/disable Linux automatic NUMA balancing.
 
-Use the autonuma subcommand to print the current setting, --setup to enable
-balancing, or --reset to disable it. Changes affect the whole host and require
-write access to /proc/sys/kernel/numa_balancing, normally as root. The benchmark
-runner imports these helpers to control balancing during measurements."""
+Use 'autonuma --check', '--setup' to enable, or '--reset' to disable. Writes
+require root or noninteractive sudo and are verified by reading the setting back.
+The runner uses the same helpers with a KernelSettings transaction for cleanup.
+"""
 
 import argparse
-import os
+from pathlib import Path
+import subprocess
+import sys
 
-from utils import run_proc_simple
+from host_config import KernelSettings, privilege_prefix
 
-
-hugepage_size_kb = 1048576
-# hugepage_size_kb = 2048
-
-
-def get_autonuma_sysfs() -> str:
-    return "/proc/sys/kernel/numa_balancing"
+AUTONUMA_PATH = Path('/proc/sys/kernel/numa_balancing')
 
 
-def check_autonuma(pre_fix: str = "") -> int:
-    cmd = ["cat", get_autonuma_sysfs()]
-    output_lines = run_proc_simple(cmd).splitlines()
-    autonuma_setting = 0
-    if len(output_lines) > 0:
-        items = output_lines[0].split()
-        if len(items) > 0 and items[0].isdigit():
-            autonuma_setting = int(items[0])
-    print(f"{pre_fix} {get_autonuma_sysfs()} setting: {autonuma_setting}")
-    return autonuma_setting
+def check_autonuma(pre_fix=''):
+    try:
+        value = int(AUTONUMA_PATH.read_text().strip())
+    except (OSError, ValueError):
+        value = None
+    print(f'{pre_fix} NUMA balancing: {value if value is not None else "unavailable"}')
+    return value
 
 
-def setup_autonuma(value: int) -> None:
-    cmd = ["echo", str(value), ">", get_autonuma_sysfs()]
-    os.system(" ".join(cmd))
-    check_autonuma("new")
-
-
-def main(args):
-    autonuma_setting = check_autonuma("current")
-    if args.setup:
-        setup_autonuma(value=1)
-    if args.reset:
-        setup_autonuma(value=0)
+def setup_autonuma(value, settings):
+    settings.set(AUTONUMA_PATH, value)
 
 
 def init_parser():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    subparsers = parser.add_subparsers(dest="command")
-    topics = {
-        "autonuma": "NUMA balancing",
-    }
-    for command, message in topics.items():
-        cmd_parser = subparsers.add_parser(command, help=message)
-        cmd_parser.add_argument(
-            "--check", "-c", action="store_true", help="check current setting"
-        )
-        cmd_parser.add_argument(
-            "--setup", "-s", action="store_true", help="setup setting"
-        )
-        cmd_parser.add_argument(
-            "--reset", "-r", action="store_true", help="disable setting"
-        )
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest='command')
+    command = subparsers.add_parser('autonuma')
+    action = command.add_mutually_exclusive_group()
+    action.add_argument('--check', '-c', action='store_true', help='print current setting')
+    action.add_argument('--setup', '-s', action='store_true', help='enable NUMA balancing')
+    action.add_argument('--reset', '-r', action='store_true', help='disable NUMA balancing')
     return parser
 
 
-if __name__ == "__main__":
+def main():
     parser = init_parser()
     args = parser.parse_args()
-    main(args)
+    if args.command is None:
+        parser.error('choose the autonuma subcommand')
+    check_autonuma('current')
+    if args.setup or args.reset:
+        settings = KernelSettings(privilege_prefix())
+        setup_autonuma(1 if args.setup else 0, settings)
+        check_autonuma('new')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as error:
+        print(f'Error: {error}', file=sys.stderr)
+        sys.exit(1)

@@ -18,15 +18,7 @@ foreach(TEST ${TESTS})
 
   add_executable(${TEST} ${TEST}.cc ${COMMON_SRCS} ${WORKER_SRCS})
 
-  if (APPLE)
-    target_link_libraries(${TEST} LINK_PUBLIC
-      MmMemSys
-      pthread)
-  else()
-    target_link_libraries(${TEST} LINK_PUBLIC
-      MmMemSys
-      numa pthread)
-  endif()
+  target_link_libraries(${TEST} LINK_PUBLIC MmMemSys pthread)
 
   install(TARGETS ${TEST} DESTINATION "bin")
 endforeach()

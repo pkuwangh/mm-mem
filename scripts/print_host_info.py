@@ -1,120 +1,88 @@
 #!/usr/bin/env python3
 
-"""Print a Linux host's CPU, NUMA memory, GPU, and network-device inventory.
+"""Report CPU and NUMA memory information without requiring external utilities.
 
-Use lscpu, lsmem, numastat, and lspci to report CPU counts and NUMA CPU mappings,
-per-node memory capacity, NVIDIA GPU devices, and Ethernet/InfiniBand devices.
-The benchmark scripts also import the CPU/memory queries and colored-output
-helper from this module."""
+Linux topology and memory capacity come from sysfs/procfs, retaining actual node
+IDs. Optional GPU and network PCI inventory uses lspci when installed. Missing
+inventory tools do not prevent CPU benchmarks from running.
+"""
 
-from utils import run_proc_simple
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+NODE_ROOT = Path('/sys/devices/system/node')
 
 
 def color_str(input_str: str, color_code: int) -> str:
-    return f"\033[0;{color_code}m{input_str}\033[0m"
+    return f'\033[0;{color_code}m{input_str}\033[0m'
 
 
-# cpu
+def node_paths():
+    return sorted((path for path in NODE_ROOT.glob('node[0-9]*')
+                   if re.fullmatch(r'node\d+', path.name)),
+                  key=lambda path: int(path.name[4:]))
+
+
 def get_cpu_info(do_print=True) -> int:
-    for_real = True
-    print_cmd = False
-    num_numa_nodes = 1
-    cmd = ["lscpu"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    for line in stdout.splitlines():
-        if line.startswith("CPU(s)"):
-            items = line.split()
-            if do_print:
-                print(color_str(f"Total CPUs:\t\t{items[1]}", 32))
-        elif line.startswith("NUMA node(s)"):
-            num_numa_nodes = int(line.split()[-1])
-        elif line.startswith("NUMA") and "CPU" in line:
-            if do_print:
-                print(line)
-    return num_numa_nodes
-
-
-# memory
-def get_mem_info(do_print=True):
-    for_real = True
-    print_cmd = False
-    cmd = ["lsmem"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    for line in stdout.splitlines():
-        if line.startswith("Total online memory"):
-            if do_print:
-                print(color_str(line, 32))
-    cmd = ["numastat", "-m"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    columns = [f"Node {x}" for x in range(get_cpu_info(do_print=False))]
-    columns.append("Total")
+    nodes = node_paths()
     if do_print:
-        print(" ".join([f"{x:>10s}" for x in columns]))
-    for line in stdout.splitlines():
-        if line.startswith("MemTotal"):
-            items = line.split()
-            mem_total = [round(float(x) / 1024) for x in items[1:]]
-            if do_print:
-                print(" ".join([f"{x:>9d}G" for x in mem_total]))
-            return mem_total[:-1]
-    return []
+        print(f'Total CPUs: {os.cpu_count()}')
+        if hasattr(os, 'sched_getaffinity'):
+            print(f'Allowed CPUs: {len(os.sched_getaffinity(0))}')
+        for node in nodes:
+            try:
+                print(f'NUMA {node.name} CPUs: {(node / "cpulist").read_text().strip()}')
+            except OSError:
+                print(f'NUMA {node.name} CPUs: unavailable')
+    return len(nodes)
 
 
-# gpu
+def get_mem_info(do_print=True):
+    """Return {actual_node_id: total_memory_KiB}, excluding unreadable nodes."""
+    memory = {}
+    for node in node_paths():
+        try:
+            match = re.search(r'MemTotal:\s+(\d+)\s+kB', (node / 'meminfo').read_text())
+            if match:
+                memory[int(node.name[4:])] = int(match.group(1))
+        except OSError:
+            pass
+    if do_print:
+        if not memory:
+            print('NUMA memory information unavailable')
+        for nid, kib in memory.items():
+            print(f'Node {nid} memory: {kib / (1024 ** 2):.2f} GiB')
+    return memory
+
+
+def pci_devices():
+    if not shutil.which('lspci'):
+        print('PCI inventory unavailable (optional lspci is not installed)')
+        return []
+    result = subprocess.run(['lspci'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True)
+    if result.returncode:
+        print('PCI inventory unavailable: ' + result.stderr.strip())
+        return []
+    return result.stdout.splitlines()
+
+
 def get_gpu_info():
-    for_real = True
-    print_cmd = False
-    nvidia_gpus = []
-    cmd = ["lspci"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    for line in stdout.splitlines():
-        if "controller: NVIDIA" in line:
-            nvidia_gpus.append(line)
-    print(color_str(f"Total NVidia GPUs: {len(nvidia_gpus)}", 32))
-    gpus = []
-    cmd = ["lspci", "-vv"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    index = 0
-    curr_device = ""
-    for line in stdout.splitlines():
-        if index < len(nvidia_gpus) and (nvidia_gpus[index] in line):
-            curr_device = line.rstrip()
-            index += 1
-        if curr_device:
-            gpus.append(curr_device)
-            curr_device = ""
-    for gpu in gpus:
-        print(gpu)
+    for line in pci_devices():
+        if 'NVIDIA' in line and ('VGA' in line or '3D controller' in line):
+            print(line)
 
 
-# nic
 def get_nic_info():
-    for_real = True
-    print_cmd = False
-    nics = []
-    cmd = ["lspci"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    for line in stdout.splitlines():
-        if "Ethernet" in line or "Infiniband" in line:
-            nics.append(line)
-    print(color_str(f"Total NICs: {len(nics)}", 32))
-    nics = []
-    cmd = ["lspci", "-vv"]
-    stdout = run_proc_simple(cmd, for_real, print_cmd)
-    index = 0
-    curr_device = ""
-    for line in stdout.splitlines():
-        if index < len(nics) and (nics[index] in line):
-            curr_device = line.rstrip()
-            index += 1
-        if curr_device:
-            nics.append(curr_device)
-            curr_device = ""
-    for nic in nics:
-        print(nic)
+    for line in pci_devices():
+        if 'Ethernet' in line or 'InfiniBand' in line:
+            print(line)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     get_cpu_info()
     get_mem_info()
     get_gpu_info()

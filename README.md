@@ -14,121 +14,131 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution and release guidance,
 and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Build
+
+Building and running ordinary-allocation benchmarks do not require sudo. On Linux,
+install a C++14 compiler, CMake 3.16+, Make, Python 3.6+, and libnuma headers/library
+using one of the following paths.
+
+### System packages with sudo
+
+```sh
+./scripts/install_deps_sudo.sh
+make JOBS=4
 ```
-./scripts/install_deps.py
-make
+
+The Bash installer uses apt-get, dnf, or yum. It invokes sudo only when needed;
+`--dry-run` prints the command, and `--with-tools` adds optional reporting tools.
+On older yum systems where CMake is installed as `cmake3`, use `make CMAKE=cmake3`.
+
+### Conda or micromamba without sudo
+
+Start with an existing [Miniforge](https://github.com/conda-forge/miniforge) or
+[micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)
+installation, then run:
+
+```sh
+./scripts/install_deps_conda.sh --manager micromamba --name mm-mem
+micromamba activate mm-mem
+cmake -S . -B build/conda -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD"
+cmake --build build/conda --parallel 4
+cmake --install build/conda
 ```
+
+Use `--manager conda` and `conda activate mm-mem` for Conda. Without `--manager`,
+the script selects micromamba, mamba, or conda from PATH. It creates the named
+environment, or installs dependencies into it if it already exists. Packages
+come from conda-forge: C/C++ compilers, CMake, Make, Python, and Linux libnuma/numactl.
+Activate the environment before configuring: compiler activation selects the
+compiler, and CMake searches the active environment for libnuma. Use a fresh
+build directory when switching toolchains. The environment must remain available
+when running the installed binaries.
+
+The Conda installer also selects build packages on macOS, omitting libnuma; an
+Apple SDK/Command Line Tools installation is still needed. The Python memory-suite
+runner currently requires Linux. A Conda environment does not grant permission
+to configure huge pages, change NUMA balancing, or access restricted perf counters.
+
+### Optional reporting tools
+
+`mpstat` (sysstat), `perf`, `pgrep` (procps), and `lspci` (pciutils) are used by
+specific reporting scripts, not required to run the memory benchmarks. Install
+`perf` through the distribution's appropriate kernel-tools package. Missing
+`lspci` only skips PCI inventory.
 
 ## Run
 
-### Run All Tests
-```
+### Run the memory benchmark suite
+
+```sh
 ./scripts/run_cpu_micro.py
 ```
 
-#### Example Output
+The runner detects root or usable noninteractive sudo (`sudo -n`). It never prompts
+for a password. If you have password-based sudo access and want automatic host
+setup, first authenticate with `sudo -v`, then run the script normally.
+
+- With administrative access, it temporarily disables automatic NUMA balancing
+  when enabled and attempts to provision huge pages for additional full-region
+  random-latency tests. Huge-page binaries also use sudo when needed for allocation
+  permissions. Setup failures are reported; ordinary-allocation tests still run.
+- Without access, it leaves host settings unchanged, runs ordinary-allocation tests,
+  and warns that latency results can include more TLB/page-walk overhead or use a
+  different access pattern. These results are not directly comparable to the
+  full-region huge-page variant.
+- It restores settings it changed on normal completion, benchmark failure, Ctrl-C,
+  or SIGTERM. SIGKILL or a machine failure cannot run cleanup. This temporary setup
+  changes host-wide settings, so use `--no-system-config` on shared systems.
+- Cache dropping and memory compaction are disabled by default. Opt in with
+  `--drop-caches` and `--compact`; their effects cannot be undone by restoration.
+
+Useful variants:
+
+```sh
+# Always avoid sudo and host changes, even when administrative access is available.
+./scripts/run_cpu_micro.py --no-system-config
+
+# Use existing huge-page pools, without provisioning them or changing host settings.
+# The caller must already have permission to allocate those pages.
+./scripts/run_cpu_micro.py --no-system-config --hugepages existing
+
+# Small idle-latency smoke run without NUMA placement matrices.
+./scripts/run_cpu_micro.py --no-system-config --no-matrices --test idle_latency -b 4096 -t 1
+
+# Inspect the planned benchmark commands without running or changing anything.
+./scripts/run_cpu_micro.py --dry-run
 ```
--------- Running MM-Mem --------
----- Running Idle Latency test ...
-trying to reserve huge pages ...
-1GB huge pages - after
-         2
-threads:           1
-region size in KB: 524288
-chunk size in KB:  524288
-stride size in B:  128
-access pattern:    2 - random in full region
-use hugepage:      3 - 1GB huge page
-target duration:   10
-Idle Latency        Node-0
-Node-0              115.2
 
-reverting changes to huge pages settings ...
-1GB huge pages - reset
-         0
----- Running Peak Bandwidth test ...
-threads:           72
-region size in KB: 131072
-read/write mix:    100 - sweep read/write ratio
-target duration:   10
-timer <setup> elapsed: 507.5 ms
-           all reads :  65478.45 MB/s |   63.94 GB/s
-      3:1 read/write :  62539.91 MB/s |   61.07 GB/s
-      2:1 read/write :  61574.67 MB/s |   60.13 GB/s
-      1:1 read/write :  60788.73 MB/s |   59.36 GB/s
+`-t` is seconds per data point, not total suite duration. `--num-threads` controls
+bandwidth/memcpy/loaded-latency workers; idle latency uses one worker. `--region-size`
+is KiB per worker. The runner reports OS base page size, transparent-huge-page
+configuration, and NUMA balancing. Ordinary allocations may use transparent huge
+pages according to host policy; they are not guaranteed to use 4 KiB pages.
 
----- Running MemCpy test - Large ...
-threads:           72
-region size in KB: 131072
-copy size in KB:   131072
-target duration:   10
-timer <setup> elapsed: 996.3 ms
-Memcpy Bandwidth:   30965.55 MB/s |   30.24 GB/s
+NUMA matrices require memory-placement operations permitted by the kernel and
+container/cpuset policy. Failures are reported, never relabeled as successful NUMA
+measurements. Use `--no-matrices` to omit them. Explicit `--hugepages existing`
+allocation failures and benchmark failures return a nonzero exit status.
 
----- Running MemCpy test - Medium ...
-threads:           72
-region size in KB: 131072
-copy size in KB:   16
-target duration:   10
-timer <setup> elapsed: 994.7 ms
-Memcpy Bandwidth:   20472.51 MB/s |   19.99 GB/s
-
----- Running Loaded Latency test ...
-trying to reserve huge pages ...
-1GB huge pages - after
-         2
-threads:           72
-region size in KB: 131072
-chunk size in KB:  64
-stride size in B:  128
-access pattern:    1 - random in chunk
-use hugepage:      0 - No huge page
-read/write mix:    2 - 2:1 read/write
-target duration:   10
-timer <setup> elapsed: 523.3 ms
-       delay   bandwidth     latency
-           1        60.5      1031.9
-           8        60.3       877.9
-          32        60.4       662.3
-          48        60.5       734.7
-          64        60.5       638.1
-          80        60.4       624.7
-          88        61.1       431.4
-          96        60.9       400.5
-         104        60.5       339.5
-         112        60.9       360.9
-         128        59.6       319.0
-         160        49.4       178.1
-         192        41.3       154.9
-         224        35.8       144.5
-         256        31.4       138.8
-         320        25.5       131.8
-         384        21.4       123.9
-         448        18.3       123.9
-         512        16.4       119.4
-         640        13.4       117.0
-         768        11.4       110.5
-        1024         8.8       112.9
-
-reverting changes to huge pages settings ...
-1GB huge pages - reset
-         0
-```
+The standalone `config_huge_page.py --setup` and
+`config_sysfs_settings.py autonuma --setup/--reset` helpers remain available for
+explicit host administration. `config_huge_page.py --clear` (also `--reset`)
+**clears the selected huge-page pools**; it does not restore prior reservations.
+Prefer the runner for temporary configuration and automatic restoration.
 
 ### Individual Test - Idle Latency
-Option 1 - Use huge page and random-in-full-region pattern
+Option 1 - Let the runner provision huge pages when privileged access is available
+```sh
+./scripts/run_cpu_micro.py --test idle_latency -t 10
 ```
-./scripts/config_huge_page.py -s
-./bin/cpu_idle_latency --region_size 524288 --access_pattern 2 --use_hugepage 3 --target_duration 10
-./scripts/config_huge_page.py -r
-```
-This setup a 512MB region using 1GB pages, randomly pointer-chase through the whole region for 10 seconds.
+This runs the ordinary-allocation test and, when setup succeeds, the full-region
+random test with the largest supported huge-page size up to 1 GiB.
 
-Option 2 - Use regular 4K pages and random-in-chunk pattern
+Option 2 - Use ordinary allocation and a random-in-chunk pattern
 ```
 ./bin/cpu_idle_latency --region_size 524288 --chunk_size 128 --access_pattern 1 --target_duration 10
 ```
-This setup a 512MB region using 4KB pages, randomly pointer-chase through first 128KB chunk and then move to the next chunk.
+This allocates a 512 MiB region, pointer-chases randomly through each 128 KiB
+chunk, and then moves to the next chunk. Page backing follows OS policy.
 128KB chunk size roughly matches what L1DTLB can cover; aggressive page prefetching and buddy prefetching can partially crack this.
 
 ### Individual Test - Peak Bandwidth
@@ -140,9 +150,7 @@ Use nproc number of threads, each streaming through a 128MB region; sweep differ
 ### Individual Test - Loaded Latency
 Use 1 latency thread to do random-in-chunk pointer-chasing; other nproc-1 threads generating variable load with 2:1 read/write mix
 ```
-./scripts/config_huge_page.py -s
-./bin/cpu_loaded_latency --region_size 131072 --access_pattern 2 --use_hugepage 3 --read_write_mix 2 --target_duration 10
-./scripts/config_huge_page.py -r
+./scripts/run_cpu_micro.py --test loaded_latency -t 10
 ```
 
 Again, if huge page is not available, we can use random-in-chunk pattern
