@@ -2,8 +2,15 @@
 
 ## Latest
 
+## 1.2.0
+
+### Released
+
+- 2026-10-19
+
 ### Fixed
 
+- Reject memcpy fragments larger than the memory region.
 - Fix process matching and stats collection.
 - Fix handling of sparse NUMA nodes and improve error reporting.
 
