@@ -66,6 +66,11 @@ int main(int argc, char** argv) {
     if (config.fragment_size_b == 0) {
         config.fragment_size_b = config.region_size_kb * 1024;
     }
+    if (config.fragment_size_b == 0 ||
+        config.fragment_size_b > config.region_size_kb * 1024) {
+        std::cerr << "Error: memcpy fragment size must be positive and fit within the region\n";
+        return 1;
+    }
     config.dump();
     // setup workers
     mm_utils::WorkerThreadManager<mm_worker::MemLatBwThreadPacket> worker_manager(

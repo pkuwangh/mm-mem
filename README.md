@@ -76,6 +76,8 @@ specific reporting scripts, not required to run the memory benchmarks. Install
 The runner detects root or usable noninteractive sudo (`sudo -n`). It never prompts
 for a password. If you have password-based sudo access and want automatic host
 setup, first authenticate with `sudo -v`, then run the script normally.
+If cached sudo credentials expire during a long run, cleanup may fail; the runner
+reports any settings it could not restore.
 
 - With administrative access, it temporarily disables automatic NUMA balancing
   when enabled and attempts to provision huge pages for additional full-region
